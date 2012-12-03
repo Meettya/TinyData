@@ -1,0 +1,7 @@
+support
+test
+test_browser
+examples
+doc
+*.sock
+.DS_Store
