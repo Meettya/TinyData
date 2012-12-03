@@ -31,6 +31,11 @@ commands = require path.join paths.cake_dep, 'command'
 Now tasks
 ###
 
+task 'pre_commit', 'build all before commit', pre_commit = (cb) ->
+  async.series [ test_coffee, build_lib_node, prepare_test_for_browser ], (err) ->
+      console.log "#{err}".error if err?
+      console.log ' Pre-commit: all done!'.out
+
 task 'test_coffee', 'test module for node.js', test_coffee = (cb) ->
   commands.test_coffee cb, paths.test_dir
 

@@ -5,3 +5,5 @@ examples
 doc
 *.sock
 .DS_Store
+develop_suite
+cake_dep
