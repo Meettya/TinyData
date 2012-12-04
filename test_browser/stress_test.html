@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>TinyData example and test</title>
+    <title>TinyData stress-test</title>
     <!-- mocha styles-->
     <link rel="stylesheet" href="css/mocha.css">
     <!-- only head.js needed at first-->
@@ -10,9 +10,9 @@
     <!--head.js loader--><script type="text/javascript">
 (function() {
 
-  head.js("vendor/jquery-1.7.1.min.js", "vendor/underscore-1.4.2.min.js", "vendor/mocha-1.7.3.min.js", {
+  head.js("vendor/jquery-1.8.3.min.js", "vendor/underscore-1.4.2.min.js", "vendor/mocha-1.7.3.min.js", {
     "chai": "vendor/chai-1.4.0.min.js"
-  }, "js/tinydata.js", "test/tinydata-test.js", function() {
+  }, "js/tinydata.js", "test/tinydata-stress_test.js", function() {
     return mocha.run();
   });
 

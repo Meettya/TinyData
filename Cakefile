@@ -80,7 +80,7 @@ minify_lib_browser = (cb) ->
 
 #task 'build_test_browser_js', 'build test js for browser', 
 build_test_browser_js = (cb) ->
-  commands.build_coffee cb, paths.test_dir, path.join(paths.test_browser_dir, 'test'), /-test\.coffee$/
+  commands.build_coffee cb, paths.test_dir, path.join(paths.test_browser_dir, 'test'), /-(?:stress_)?test\.coffee$/
 
 #task 'copy_lib_to_test_browser', 'copy library to browser test', 
 copy_lib_to_test_browser = (cb) ->

@@ -109,20 +109,18 @@ class TinyData
   _doStringify: (in_obj, prefix='', result_array=[]) ->
 
     switch in_obj_type = @_getItType in_obj
-      when 'PLAIN'
+      when 'PLAIN', 'STRING'
         result_array.push "#{prefix}#{in_obj}"
       when 'ARRAY', 'HASH'
         _.each in_obj, (value, key) => 
           @_doStringify value, "#{prefix}#{key}.", result_array
-      # TODO! add verbose level, may be throw exception
       else
-        console?.warn "don`t want stringify #{in_obj_type} |#{in_obj}|"
+        result_array.push "#{prefix}__#{in_obj}__"
 
     result_array
 
   ###
-  This method return type of sanded things
-  [ HASH | ARRAY | PLAIN | OTHER ]
+  This method return type of incoming things
   HASH mean NOT a function or RegExp or something else  - just simple object
   ###
   _getItType : (x) ->
@@ -130,11 +128,22 @@ class TinyData
     if _.isArray(x)
       'ARRAY' 
     # little bit harder 
-    else if _.isString(x) or _.isNumber(x) or _.isBoolean(x) or _.isNull(x)
+    else if _.isString(x)
+      'STRING'
+    else if _.isNumber(x) or _.isBoolean(x) or _.isNull(x)
       'PLAIN' 
     # and it not
-    else if _.isObject(x) and not (_.isFunction(x) or _.isRegExp(x) or _.isDate(x) or _.isArguments(x))
-      'HASH'
+    else if _.isObject(x)
+      if _.isFunction(x)
+        'FUNCTION'
+      else if _.isRegExp(x)
+        'REGEXP'
+      else if _.isDate(x)
+        'DATE' 
+      else if _.isArguments(x)
+        'ARGUMENTS'
+      else
+        'HASH'
     else 
       'OTHER'
 
