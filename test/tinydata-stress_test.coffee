@@ -5,7 +5,7 @@ Its so wrong, but its OK for test
 ###
 
 # resolve require from [window] or by require() 
-_ = @_ ? require 'underscore'
+_ = @_ ? require 'lodash'
 
 lib_path = GLOBAL?.lib_path || ''
 
@@ -13,9 +13,9 @@ TinyData = require "#{lib_path}tinydata"
 
 describe 'TinyData: stress test', ->
 
-  object_td = huge_array = null
+  object_td = huge_array = stringify_filter = null
 
-  user_like_rpath = '^(.+\\.)like\\.\\d+\\.([^.]+)$'
+  user_like_rpath = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$'
 
   users = [
     {
@@ -45,10 +45,21 @@ describe 'TinyData: stress test', ->
     }
   ]
 
-  beforeEach ->
-    object_td = new TinyData()
 
-  describe '#getOriginFor()', ->
+  reference_func = (in_obj) ->
+    console.time '->  reference: '
+    like_dict = {}
+
+    for item, item_idx in in_obj
+      for own name, value of item when name is 'like'
+        for element in value
+          like_dict[element] ?= []
+          like_dict[element].push "#{item_idx}"
+
+    console.timeEnd '->  reference: '
+    like_dict
+
+  describe 'reference speed for clean js iterators', ->
 
     beforeEach ->
       huge_array = _.union [], users
@@ -57,31 +68,153 @@ describe 'TinyData: stress test', ->
 
       _(12).times -> huge_array = huge_array.concat huge_array
 
-      object_td.setOriginalObject(huge_array).setRpath(user_like_rpath)
-      huge_result = object_td.getOriginFor 'soul'
+      huge_result = reference_func huge_array
 
       _.size(huge_array).should.be.a.equal 20480
-      _.size(huge_result).should.be.a.equal 8192
+      _.size(huge_result['soul']).should.be.a.equal 8192
 
     it 'should work on huge data (40960 objects in set) ', ->
 
       _(13).times -> huge_array = huge_array.concat huge_array
 
-      object_td.setOriginalObject(huge_array).setRpath(user_like_rpath)
-      huge_result = object_td.getOriginFor 'soul'
+      huge_result = reference_func huge_array
 
       _.size(huge_array).should.be.a.equal 40960
-      _.size(huge_result).should.be.a.equal 16384
+      _.size(huge_result['soul']).should.be.a.equal 16384
 
     it 'should work on huge data (81920 objects in set) ', ->
 
       _(14).times -> huge_array = huge_array.concat huge_array
 
-      object_td.setOriginalObject(huge_array).setRpath(user_like_rpath)
-      huge_result = object_td.getOriginFor 'soul'
+      huge_result = reference_func huge_array
 
       _.size(huge_array).should.be.a.equal 81920
-      _.size(huge_result).should.be.a.equal 32768
+      _.size(huge_result['soul']).should.be.a.equal 32768
+
+  describe '#rakeUp() without optimization', ->
+
+    beforeEach ->
+      huge_array = _.union [], users
+
+    it 'should work on huge data (20480 objects in set) ', ->
+
+      _(12).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 20480
+      _.size(huge_result['soul']).should.be.a.equal 8192
+
+    
+    it 'should work on huge data (40960 objects in set) ', ->
+      
+      _(13).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 40960
+      _.size(huge_result['soul']).should.be.a.equal 16384
+      
+
+    it 'should work on huge data (81920 objects in set) ', ->
+      
+      _(14).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 81920
+      _.size(huge_result['soul']).should.be.a.equal 32768
+      
+  describe '#rakeUp() with rakeStringify pre-filter (with strict settings)', ->
+
+    beforeEach ->
+      huge_array = _.union [], users
+
+      stringify_filter = 
+        origin_pattern  : /^\d+\.$/
+        element_name    : 'like'
+        apply_on_depth  : 1
+
+    it 'should work on huge data (20480 objects in set) ', ->
+
+      _(12).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      object_td.rakeStringify stringify_filter
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 20480
+      _.size(huge_result['soul']).should.be.a.equal 8192
+
+    
+    it 'should work on huge data (40960 objects in set) ', ->
+      
+      _(13).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      object_td.rakeStringify stringify_filter
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 40960
+      _.size(huge_result['soul']).should.be.a.equal 16384
+      
+
+    it 'should work on huge data (81920 objects in set) ', ->
+      
+      _(14).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      object_td.rakeStringify stringify_filter
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 81920
+      _.size(huge_result['soul']).should.be.a.equal 32768
+
+  describe '#rakeUp() with rakeStringify pre-filter (with moderate settings)', ->
+
+    beforeEach ->
+      huge_array = _.union [], users
+
+      stringify_filter = 
+        element_name    : 'like'
+        apply_on_depth  : 1
+
+    it 'should work on huge data (20480 objects in set) ', ->
+
+      _(12).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      object_td.rakeStringify stringify_filter
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 20480
+      _.size(huge_result['soul']).should.be.a.equal 8192
+
+    it 'should work on huge data (40960 objects in set) ', ->
+      
+      _(13).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      object_td.rakeStringify stringify_filter
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 40960
+      _.size(huge_result['soul']).should.be.a.equal 16384
+      
+
+    it 'should work on huge data (81920 objects in set) ', ->
+      
+      _(14).times -> huge_array = huge_array.concat huge_array
+
+      object_td = new TinyData huge_array, timing : yes
+      object_td.rakeStringify stringify_filter
+      huge_result = object_td.rakeUp user_like_rpath
+
+      _.size(huge_array).should.be.a.equal 81920
+      _.size(huge_result['soul']).should.be.a.equal 32768
 
 
 

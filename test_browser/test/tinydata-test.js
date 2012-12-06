@@ -8,34 +8,37 @@ Its so wrong, but its OK for test
 
 
 (function() {
-  var TinyData, lib_path;
+  var TinyData, lib_path, _, _ref;
+
+  _ = (_ref = this._) != null ? _ref : require('lodash');
 
   lib_path = (typeof GLOBAL !== "undefined" && GLOBAL !== null ? GLOBAL.lib_path : void 0) || '';
 
   TinyData = require("" + lib_path + "tinydata");
 
   describe('TinyData:', function() {
-    var first_object, first_object_secondary_index, first_object_stringify, object_td, second_object, second_object_rpath, second_object_rpath_two, second_object_secondary_index, second_object_secondary_index_two, second_object_stringify, third_object, third_object_rpath, third_object_secondary_index;
+    var first_object, first_object_result, first_object_rpath, first_object_stringify, object_td, second_object, second_object_result, second_object_result_two, second_object_rpath, second_object_rpath_two, second_object_stringify, third_object, third_object_result, third_object_rpath, userRakeFinalize, user_like2_result, user_like_rake_rule, user_like_rake_rule2, users, users_finalize_result;
     object_td = null;
+    first_object_rpath = '^([^.]+\\.)([^.]+)$';
     first_object = {
       firs: 'one',
       second: 'two',
       third: 'three'
     };
     first_object_stringify = ['firs.one', 'second.two', 'third.three'];
-    first_object_secondary_index = {
+    first_object_result = {
       one: ['firs'],
       two: ['second'],
       three: ['third']
     };
-    second_object_rpath = '^((?:[^.]+\\.){2})([^.]+)$';
+    second_object_rpath = /^((?:[^.]+\.){2})([^.]+)$/;
     second_object = {
       first: ['one', 'two', 'three'],
       second: ['four', 'five'],
       third: ['six', ['seven']]
     };
     second_object_stringify = ['first.0.one', 'first.1.two', 'first.2.three', 'second.0.four', 'second.1.five', 'third.0.six', 'third.1.0.seven'];
-    second_object_secondary_index = {
+    second_object_result = {
       one: ['first.0'],
       two: ['first.1'],
       three: ['first.2'],
@@ -44,117 +47,158 @@ Its so wrong, but its OK for test
       six: ['third.0']
     };
     second_object_rpath_two = '^((?:[^.]+\\.){3})([^.]+)$';
-    second_object_secondary_index_two = {
+    second_object_result_two = {
       seven: ['third.1.0']
     };
-    third_object_rpath = '^((?:[^.]+\\.){2})([^.]+)$';
+    third_object_rpath = function(stringifyed_item, emit) {
+      var mached_data;
+      if (mached_data = stringifyed_item.match(/^([^.]+\.[^.]+)\.([^.]+)$/)) {
+        emit(mached_data[2], mached_data[1]);
+      }
+      return null;
+    };
     third_object = {
       first: ['one', 'two', 'three'],
       second: ['one', 'two', 'four'],
       third: ['six', 'three']
     };
-    third_object_secondary_index = {
+    third_object_result = {
       one: ['first.0', 'second.0'],
       two: ['first.1', 'second.1'],
       three: ['first.2', 'third.1'],
       four: ['second.2'],
       six: ['third.0']
     };
-    beforeEach(function() {
-      return object_td = new TinyData();
-    });
+    users = [
+      {
+        name: 'Вася',
+        frends: ['Петя', 'Коля'],
+        like: ['пицца', 'BMX', 'рэп'],
+        date: new Date(),
+        rounded: true
+      }, {
+        name: 'Петя',
+        frends: ['Вася', 'Абдулла'],
+        like: ['пицца', 'скейт', 'soul']
+      }, {
+        name: 'Коля',
+        frends: ['Абдулла', 'Маша', 'Вася'],
+        like: ['пиво', 'шансон']
+      }, {
+        name: 'Маша',
+        frends: ['Коля', 'Абдулла'],
+        like: ['овощи', 'soul', 'этника', 'шоппинг']
+      }, {
+        name: 'Абдулла',
+        frends: ['Коля', 'Петя', 'Маша'],
+        like: ['пицца', 'теннис', 'этника']
+      }
+    ];
+    user_like_rake_rule = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$';
+    userRakeFinalize = function(users_list) {
+      return _.map(users_list, function(user_id) {
+        return users[user_id].name;
+      });
+    };
+    users_finalize_result = {
+      'пицца': ['Вася', 'Петя', 'Абдулла'],
+      BMX: ['Вася'],
+      'рэп': ['Вася'],
+      'скейт': ['Петя'],
+      soul: ['Петя', 'Маша'],
+      'пиво': ['Коля'],
+      'шансон': ['Коля'],
+      'овощи': ['Маша'],
+      'этника': ['Маша', 'Абдулла'],
+      'шоппинг': ['Маша'],
+      'теннис': ['Абдулла']
+    };
+    user_like_rake_rule2 = function(stringifyed_item, emit) {
+      var mached_data;
+      if (mached_data = stringifyed_item.match(/^(\d+)\.name\.([^.]+)$/)) {
+        return _(users[mached_data[1]].frends).each(function(item) {
+          return emit(mached_data[2], item);
+        });
+      }
+    };
+    user_like2_result = {
+      'Вася': ['Петя', 'Коля'],
+      'Петя': ['Вася', 'Абдулла'],
+      'Коля': ['Абдулла', 'Маша', 'Вася'],
+      'Маша': ['Коля', 'Абдулла'],
+      'Абдулла': ['Коля', 'Петя', 'Маша']
+    };
     describe('new()', function() {
-      it('should return TinyData object', function() {
+      it('should return TinyData object on void call', function() {
+        object_td = new TinyData();
         return object_td.should.be.an["instanceof"](TinyData);
       });
-      return it('should construct and build secondary index at init', function() {
-        var local_object;
-        local_object = new TinyData(second_object, second_object_rpath);
-        return local_object.getOriginFor('three').should.be.a.eql(second_object_secondary_index.three);
+      return it('should return TinyData object on call with data', function() {
+        object_td = new TinyData(first_object);
+        return object_td.should.be.an["instanceof"](TinyData);
       });
     });
-    describe('#setOriginalObject()', function() {
-      it('should setup object and return self', function() {
-        return object_td.setOriginalObject(first_object).should.be.an["instanceof"](TinyData);
+    describe('#rakeUp()', function() {
+      it('should correct work with plain object and string as rake rule', function() {
+        object_td = new TinyData(first_object);
+        return object_td.rakeUp(first_object_rpath).should.be.a.eql(first_object_result);
       });
-      it('should build correct index for for plain object after set', function() {
-        object_td.setOriginalObject(first_object);
-        return object_td.getSecondaryIndex().should.be.a.eql(first_object_secondary_index);
+      it('should correct work with deep object and RegExp as rake rule', function() {
+        object_td = new TinyData(second_object);
+        return object_td.rakeUp(second_object_rpath).should.be.a.eql(second_object_result);
       });
-      it('should build correct index for for deep object', function() {
-        object_td.setOriginalObject(second_object).setRpath(second_object_rpath);
-        return object_td.getSecondaryIndex().should.be.a.eql(second_object_secondary_index);
+      it('should correct work with doubled-value object and function as rake rule', function() {
+        object_td = new TinyData(third_object);
+        return object_td.rakeUp(third_object_rpath).should.be.a.eql(third_object_result);
       });
-      return it('should build correct index for for doubled-value object', function() {
-        object_td.setOriginalObject(first_object);
-        object_td.setOriginalObject(third_object).setRpath(third_object_rpath);
-        return object_td.getSecondaryIndex().should.be.a.eql(third_object_secondary_index);
+      it('should correct work with cached stringifyed results', function() {
+        object_td = new TinyData(second_object);
+        object_td.rakeUp(second_object_rpath).should.be.a.eql(second_object_result);
+        return object_td.rakeUp(second_object_rpath_two).should.be.a.eql(second_object_result_two);
       });
-    });
-    describe('#getOriginalObject()', function() {
-      return it('should return original object', function() {
-        object_td.setOriginalObject(first_object);
-        return object_td.getOriginalObject().should.be.a.equal(first_object);
+      it('should correct work with finalize function', function() {
+        var users_engine;
+        users_engine = new TinyData(users);
+        return users_engine.rakeUp(user_like_rake_rule, userRakeFinalize).should.be.a.eql(users_finalize_result);
       });
-    });
-    describe('#setRpath()', function() {
-      it('should setup Rpath and return self', function() {
-        return object_td.setRpath(second_object_rpath).should.be.an["instanceof"](TinyData);
+      it('should correct work with data changed rake rule function', function() {
+        var users_engine;
+        users_engine = new TinyData(users);
+        return users_engine.rakeUp(user_like_rake_rule2).should.be.a.eql(user_like2_result);
       });
-      return it('should rebuild secondary index on untouched stringifyed results', function() {
-        var local_object;
-        local_object = new TinyData(second_object, second_object_rpath);
-        local_object.setRpath(second_object_rpath_two);
-        return local_object.getSecondaryIndex().should.be.a.eql(second_object_secondary_index_two);
+      it('should throw error on void call', function() {
+        object_td = new TinyData(second_object);
+        return (function() {
+          return object_td.rakeUp();
+        }).should.to["throw"](/argument must be/);
       });
-    });
-    describe('#getRpath()', function() {
-      return it('should return original string', function() {
-        object_td.setRpath(second_object_rpath);
-        return object_td.getRpath().should.be.a.equal(second_object_rpath);
+      it('should throw error on call with wrong rake rule type', function() {
+        object_td = new TinyData(second_object);
+        return (function() {
+          return object_td.rakeUp({
+            data: false
+          });
+        }).should.to["throw"](/argument must be/);
       });
-    });
-    describe('#getSecondaryIndex()', function() {
-      it('should return empty index for empty object', function() {
-        return object_td.getSecondaryIndex().should.be.a.eql({});
-      });
-      it('should return correct value for plain object', function() {
-        object_td.setOriginalObject(first_object);
-        return object_td.getSecondaryIndex().should.be.a.eql(first_object_secondary_index);
-      });
-      return it('should return correct value for deep object', function() {
-        object_td.setOriginalObject(second_object).setRpath(second_object_rpath);
-        return object_td.getSecondaryIndex().should.be.a.eql(second_object_secondary_index);
+      return it('should throw error on call with wrong finalize type', function() {
+        object_td = new TinyData(second_object);
+        return (function() {
+          return object_td.rakeUp('test', 'test');
+        }).should.to["throw"](/argument must be Function/);
       });
     });
-    describe('#getStringifyedObject()', function() {
+    return describe('#rakeStringify()', function() {
       it('should return empty array on empty object', function() {
-        return object_td.getStringifyedObject().should.be.a.eql([]);
+        object_td = new TinyData;
+        return object_td.rakeStringify().should.be.a.eql([]);
       });
       it('should return correct value for plain object', function() {
-        object_td.setOriginalObject(first_object);
-        return object_td.getStringifyedObject().should.be.a.eql(first_object_stringify);
+        object_td = new TinyData(first_object);
+        return object_td.rakeStringify().should.be.a.eql(first_object_stringify);
       });
       return it('should return correct value for deep object', function() {
-        object_td.setOriginalObject(second_object);
-        return object_td.getStringifyedObject().should.be.a.eql(second_object_stringify);
-      });
-    });
-    return describe('#getOriginFor()', function() {
-      it('should return undef on empty object', function() {
-        return expect(object_td.getOriginFor('foo')).to.be.undefined;
-      });
-      it('should return correct value for plain object', function() {
-        object_td.setOriginalObject(first_object);
-        return object_td.getOriginFor('two').should.be.a.eql(first_object_secondary_index.two);
-      });
-      it('should return correct value for deep object', function() {
-        object_td.setOriginalObject(second_object).setRpath(second_object_rpath);
-        return object_td.getOriginFor('three').should.be.a.eql(second_object_secondary_index.three);
-      });
-      return it('should return correct value for doubled-value object', function() {
-        object_td.setOriginalObject(third_object).setRpath(third_object_rpath);
-        return object_td.getOriginFor('three').should.be.a.eql(third_object_secondary_index.three);
+        object_td = new TinyData(second_object);
+        return object_td.rakeStringify().should.be.a.eql(second_object_stringify);
       });
     });
   });

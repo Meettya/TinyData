@@ -1,6 +1,6 @@
 {
   "name": "TinyData",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Tiny data mining engine, with naive map-reduce logic",
   "main": "index.js",
   "repository": "",
@@ -11,7 +11,7 @@
   ],
   "author": "Dmitrii Karpich <meettya@gmail.com>",
   "dependencies": {
-      "underscore": ">=1.3.3"
+      "lodash" : "latest"
   },
   "devDependencies": {
       "coffee-script": ">=1.3.3",
@@ -23,7 +23,8 @@
       "colors" : "latest",
       "uglify-js" : "latest",
       "fs-extra" : "latest",
-      "async" : "latest"
+      "async" : "latest",
+      "lodash" : "latest"
   },
   "scripts": {
       "test": "cake test_coffee"
