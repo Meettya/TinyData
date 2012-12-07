@@ -1,5 +1,6 @@
 #!/usr/bin/env coffee
 
+
 _ = require 'lodash'
 
 # to reload TinyData
@@ -77,8 +78,6 @@ console.log _.size(huge_result['soul'])
 
 console.log huge_result
 
-
-
 console.log "\n--------REFERENCE------\n"
 
 # user_like_rpath = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$'
@@ -108,5 +107,4 @@ console.log """
 ---------------------------OK-------------------
 
             """
-
 

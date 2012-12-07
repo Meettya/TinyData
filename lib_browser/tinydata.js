@@ -56,9 +56,28 @@ work as mapReduce, but in some different way
 */
 
 
+/*
+Timing method decorator
+*/
+
+
 (function() {
-  var TinyData, _, _ref,
+  var TinyData, timingIfItNeeded, _, _ref,
     __hasProp = {}.hasOwnProperty;
+
+  timingIfItNeeded = function(label, methodBody) {
+    return function() {
+      var __rval__;
+      if (this._do_timing_) {
+        console.time(label);
+      }
+      __rval__ = methodBody.apply(this, arguments);
+      if (this._do_timing_) {
+        console.timeEnd(label);
+      }
+      return __rval__;
+    };
+  };
 
   _ = (_ref = this._) != null ? _ref : require('lodash');
 
@@ -105,22 +124,13 @@ work as mapReduce, but in some different way
     */
 
 
-    TinyData.prototype.rakeStringify = function(stringify_filter, stubs_list) {
-      var _ref1, _ref2;
+    TinyData.prototype.rakeStringify = timingIfItNeeded('rakeStringify', function(stringify_filter, stubs_list) {
+      var _ref1;
       if (stubs_list == null) {
         stubs_list = [];
       }
-      if (this._do_timing_) {
-        console.time('rakeStringify');
-        if ((_ref1 = this._cache_stringifyed_object_) == null) {
-          this._cache_stringifyed_object_ = this._doStringify(stringify_filter, stubs_list);
-        }
-        console.timeEnd('rakeStringify');
-        return this._cache_stringifyed_object_;
-      } else {
-        return (_ref2 = this._cache_stringifyed_object_) != null ? _ref2 : this._cache_stringifyed_object_ = this._doStringify(stringify_filter, stubs_list);
-      }
-    };
+      return (_ref1 = this._cache_stringifyed_object_) != null ? _ref1 : this._cache_stringifyed_object_ = this._doStringify(stringify_filter, stubs_list);
+    });
 
     /*
       That's all, folks!
@@ -134,17 +144,10 @@ work as mapReduce, but in some different way
     */
 
 
-    TinyData.prototype._proceedRake = function(rake_function) {
+    TinyData.prototype._proceedRake = timingIfItNeeded('proceedRake', function(rake_function) {
       var raked_object;
-      if (this._do_timing_) {
-        console.time('proceedRake');
-        raked_object = rake_function(this._cache_stringifyed_object_);
-        console.timeEnd('proceedRake');
-        return raked_object;
-      } else {
-        return raked_object = rake_function(this._cache_stringifyed_object_);
-      }
-    };
+      return raked_object = rake_function(this._cache_stringifyed_object_);
+    });
 
     /*
       This method return rake function itself, its different for 
@@ -234,31 +237,45 @@ work as mapReduce, but in some different way
     */
 
 
-    TinyData.prototype._doStringify2 = function(stringify_rule, stubs_list) {
-      var idx, in_obj, in_obj_type, innner_loop, job_pointer, job_queue, key, prefix, queue_end_pointer, result_array, value, _i, _j, _len, _len1, _ref1, _ref2;
+    TinyData.prototype._doStringify = function(stringify_rule, stubs_list) {
+      var innner_loop, is_filter_passed, name_matcher, result_array,
+        _this = this;
       result_array = [];
-      innner_loop = null;
-      console.log('_doStringify2');
-      job_queue = [[this._original_obj_, '']];
-      job_pointer = 0;
-      queue_end_pointer = 1;
-      while (queue_end_pointer > job_pointer) {
-        _ref1 = job_queue[job_pointer], in_obj = _ref1[0], prefix = _ref1[1];
-        switch (in_obj_type = this._getItType(in_obj)) {
+      is_filter_passed = function() {
+        return true;
+      };
+      if (stringify_rule != null) {
+        name_matcher = stringify_rule.origin_pattern != null ? function(matcher_elem_name, matcher_elem_origin) {
+          return matcher_elem_name === stringify_rule.element_name && stringify_rule.origin_pattern.test(matcher_elem_origin);
+        } : function(matcher_elem_name) {
+          return matcher_elem_name === stringify_rule.element_name;
+        };
+        is_filter_passed = function(elem_origin, elem_name, elem_depth) {
+          if (stringify_rule.apply_on_depth === elem_depth) {
+            return name_matcher(elem_name, elem_origin);
+          } else {
+            return true;
+          }
+        };
+      }
+      innner_loop = function(in_obj, prefix, depth) {
+        var idx, in_obj_type, key, value, _i, _j, _len, _len1, _ref1;
+        switch (in_obj_type = _this._getItType(in_obj)) {
           case 'HASH':
-            _ref2 = _.keys(in_obj);
-            for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-              key = _ref2[_i];
-              value = in_obj[key];
-              job_queue.push([value, "" + prefix + key + "."]);
-              queue_end_pointer += 1;
+            _ref1 = _.keys(in_obj);
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              key = _ref1[_i];
+              if (is_filter_passed(prefix, key, depth)) {
+                innner_loop(in_obj[key], "" + prefix + key + ".", depth + 1);
+              }
             }
             break;
           case 'ARRAY':
             for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
               value = in_obj[idx];
-              job_queue.push([value, "" + prefix + idx + "."]);
-              queue_end_pointer += 1;
+              if (is_filter_passed(prefix, idx, depth)) {
+                innner_loop(value, "" + prefix + idx + ".", depth + 1);
+              }
             }
             break;
           case 'PLAIN':
@@ -272,98 +289,8 @@ work as mapReduce, but in some different way
           default:
             result_array.push("" + prefix + "__" + in_obj_type + "__");
         }
-        job_pointer += 1;
-      }
-      return result_array;
-    };
-
-    /*
-      This method stringify object
-    */
-
-
-    TinyData.prototype._doStringify = function(stringify_rule, stubs_list) {
-      var innner_loop, is_filter_passed, name_matcher, result_array,
-        _this = this;
-      result_array = [];
-      innner_loop = null;
-      if (stringify_rule == null) {
-        innner_loop = function(in_obj, prefix) {
-          var idx, in_obj_type, key, value, _i, _j, _len, _len1, _ref1;
-          switch (in_obj_type = _this._getItType(in_obj)) {
-            case 'HASH':
-              _ref1 = _.keys(in_obj);
-              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                key = _ref1[_i];
-                innner_loop(in_obj[key], "" + prefix + key + ".");
-              }
-              break;
-            case 'ARRAY':
-              for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
-                value = in_obj[idx];
-                innner_loop(value, "" + prefix + idx + ".");
-              }
-              break;
-            case 'PLAIN':
-            case 'STRING':
-              result_array.push("" + prefix + in_obj);
-              break;
-            case 'DATE':
-            case 'REGEXP':
-              result_array.push("" + prefix + "__" + in_obj_type + "__|" + in_obj + "|__");
-              break;
-            default:
-              result_array.push("" + prefix + "__" + in_obj_type + "__");
-          }
-          return null;
-        };
-      } else {
-        name_matcher = stringify_rule.origin_pattern != null ? function(matcher_elem_name, matcher_elem_origin) {
-          return matcher_elem_name === stringify_rule.element_name && stringify_rule.origin_pattern.test(matcher_elem_origin);
-        } : function(matcher_elem_name) {
-          return matcher_elem_name === stringify_rule.element_name;
-        };
-        is_filter_passed = function(elem_origin, elem_name, elem_depth) {
-          if (stringify_rule.apply_on_depth !== elem_depth) {
-            return true;
-          } else {
-            return name_matcher(elem_name, elem_origin);
-          }
-        };
-        innner_loop = function(in_obj, prefix, depth) {
-          var idx, in_obj_type, key, value, _i, _j, _len, _len1, _ref1;
-          switch (in_obj_type = _this._getItType(in_obj)) {
-            case 'HASH':
-              _ref1 = _.keys(in_obj);
-              for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                key = _ref1[_i];
-                if (is_filter_passed(prefix, key, depth)) {
-                  innner_loop(in_obj[key], "" + prefix + key + ".", depth + 1);
-                }
-              }
-              break;
-            case 'ARRAY':
-              for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
-                value = in_obj[idx];
-                if (is_filter_passed(prefix, idx, depth)) {
-                  innner_loop(value, "" + prefix + idx + ".", depth + 1);
-                }
-              }
-              break;
-            case 'PLAIN':
-            case 'STRING':
-              result_array.push("" + prefix + in_obj);
-              break;
-            case 'DATE':
-            case 'REGEXP':
-              result_array.push("" + prefix + "__" + in_obj_type + "__|" + in_obj + "|__");
-              break;
-            default:
-              result_array.push("" + prefix + "__" + in_obj_type + "__");
-          }
-          return null;
-        };
-      }
+        return null;
+      };
       innner_loop(this._original_obj_, '', 0);
       return result_array;
     };
