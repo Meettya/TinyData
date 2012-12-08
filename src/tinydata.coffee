@@ -32,19 +32,21 @@ class TinyData
     @_do_timing_ = if @_options_.timing? and @_options_.timing is on and console?.time? then yes else no
     
     # hm, its actually is bad things, but I don`t know how do it well
-    @_as_dot_ = "\uFE45"
+    @_dot_ = 
+      internal : "\uFE45"
+      external : '.'
     # and it needed to polish our dirty hack :)
-    @_dot_decorator_settings =
+    @_dot_decorator_settings_ =
       rakeUp : 
-        convert_in_rake_regexp : yes # take user RegExp (as string or RegExp) 
-                                     # and replace dots to @_as_dot_, 
-                                     # not applied to function !!!!
+        convert_income_rake_regexp : yes # take user RegExp (as string or RegExp) 
+                                         # and replace dots to @_as_dot_.internal, 
+                                         # not applied to function !!!!
         convert_before_finalize_function : yes # finalize_function get already converted data
         convert_out_result      : yes # before data returning 
                                       # (obsolete if convert_before_finalize_function is 'yes' )
       rakeStringify :
         convert_stringify_filter : yes  # take user RegExp (as string or RegExp)
-                                        # and replace dots to @_as_dot_
+                                        # and replace dots to @_as_dot_.internal
 
 
 
@@ -61,12 +63,11 @@ class TinyData
     
     raked_object = @_proceedRake rake_function 
 
-    # Finalization
-    if finalize_function? and @_argParser finalize_function, 'finalize_function', 'Function'
-      for own key, value of raked_object
-        raked_object[key] = finalize_function value
-
-    raked_object
+    if finalization_name = @_getFinalizationName finalize_function
+      finalizer = @_prepareFinalization finalization_name, finalize_function
+      finalizer raked_object
+    else
+      raked_object
 
   ###
   This method stringify our original object
@@ -84,11 +85,95 @@ class TinyData
   ###
 
   ###
+  Try to reduce logic level
+  ###
+  _getFinalizationName : (user_finalize_function) ->
+    will_be_finalized = no
+
+    if user_finalize_function? and @_argParser user_finalize_function, 'finalize_function', 'Function'
+      if @_dot_decorator_settings_.rakeUp.convert_before_finalize_function
+        return 'DECORATE_THEN_FINALAZE' # YES, its middle-method return, you are really want to talk about it?
+      else
+        will_be_finalized = yes
+
+    if @_dot_decorator_settings_.rakeUp.convert_out_result
+      if will_be_finalized
+        'FINALAZE_THEN_DECORATE'
+      else
+        'DECORATE'
+
+  ###
+  This method build all finalization stuff
+  and return simple function
+  ###
+  _prepareFinalization : (finalize_name, user_finalize_function) ->
+    result_converter  = @_buildResultConvertor()
+    user_finalizer    = @_buildUserFinalizer user_finalize_function
+
+    switch finalize_name
+      when 'DECORATE'
+        (in_obj) => result_converter in_obj
+      when 'FINALAZE_THEN_DECORATE'
+        (in_obj) => result_converter user_finalizer in_obj
+      when 'DECORATE_THEN_FINALAZE'
+        (in_obj) => user_finalizer result_converter in_obj
+      else
+        throw Error "WTF???!!!"
+    
+  ###
+  To separate logic of converting
+  ###
+  _buildResultConvertor : ->
+    dot_pattern = new RegExp @_dot_.internal, 'g'
+    (in_obj) =>
+      for key in _.keys in_obj
+        for item, idx in in_obj[key]
+          in_obj[key][idx] = in_obj[key][idx].replace dot_pattern, @_dot_.external
+
+      in_obj 
+  
+  ###
+  To separate logic of finalizator
+  ###
+  _buildUserFinalizer : (user_fn) ->
+   (in_obj) =>
+    finalized_rake_result = {}
+    # we are need some checking on data from user function
+    emit = (key, value) ->
+      if key? and value?
+        finalized_rake_result[key] ?= []
+        finalized_rake_result[key].push value
+
+    user_fn key, in_obj[key], emit for key in _.keys in_obj
+      
+    finalized_rake_result
+
+  ###
   Internal method for wrap timing 
   ###
   _proceedRake: ( timingIfItNeeded 'proceedRake', (rake_function) ->
     raked_object = rake_function @_cache_stringifyed_object_
     )
+
+  ###
+  This method transform incoming RegExp changes \. (dot) to internal dot-substituter
+  Oh, f*ck, it will be funny :(
+  ###
+  _transormateRegExp: (original_regexp) ->
+
+    #!!!! количество обратных слешей в регулярке 
+    # при ее превращении в строку НЕ увеличивается
+    # забор сдвоенных обратных слешей - прикол только исходного ТЕКСТА
+
+    console.log /\dt\./.toString().match /\/\\dt\\\.\// 
+    console.log new RegExp 't\\\\.'
+    console.log new RegExp /t\./
+
+    console.log "in -> ", "#{original_regexp.toString()}"
+    result = new RegExp original_regexp.source.replace /\\\./g, @_dot_.internal
+    console.log "out ->", "#{result.source}"
+    result
+
 
   ###
   This method return rake function itself, its different for 
@@ -98,6 +183,11 @@ class TinyData
     #IKNOW! yes, its diplicated code, but its for speed up
     switch rake_rule_type
       when 'REGEXP'
+
+        # if incoming RegExp needed to be transformed
+        if @_dot_decorator_settings_.rakeUp.convert_income_rake_regexp
+          rake_rule = @_transormateRegExp rake_rule
+
         (in_array) ->
           rake_result = {}
 
@@ -184,15 +274,16 @@ class TinyData
 
     # its filter itself, assembled and ready to fire
     is_filter_passed = if stringify_rule? then filter_body else -> yes
+    dot_sign = @_dot_.internal
 
-    innner_loop = (in_obj, prefix, depth) =>
+    innner_loop = (in_obj, prefix, depth ) =>
       switch in_obj_type = @_getItType in_obj
         when 'HASH'
           for key in _.keys in_obj when is_filter_passed prefix, key, depth
-            innner_loop in_obj[key], "#{prefix}#{key}\uFE45", depth + 1
+            innner_loop in_obj[key], "#{prefix}#{key}#{dot_sign}", depth + 1
         when 'ARRAY'
           for value, idx in in_obj when is_filter_passed prefix, idx, depth
-            innner_loop value, "#{prefix}#{idx}\uFE45", depth + 1
+            innner_loop value, "#{prefix}#{idx}#{dot_sign}", depth + 1
         when 'PLAIN', 'STRING'
           result_array.push "#{prefix}#{in_obj}"
         when 'DATE', 'REGEXP'
@@ -202,7 +293,7 @@ class TinyData
       null
 
     # TODO - check 0 on hashes, is it correct ?
-    innner_loop @_original_obj_, '', 0 
+    innner_loop @_original_obj_, '', 0
 
     result_array
 
