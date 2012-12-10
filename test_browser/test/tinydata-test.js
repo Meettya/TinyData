@@ -17,7 +17,7 @@ Its so wrong, but its OK for test
   TinyData = require("" + lib_path + "tinydata");
 
   describe('TinyData:', function() {
-    var first_object, first_object_result, first_object_rpath, first_object_stringify, object_td, second_object, second_object_result, second_object_result_two, second_object_rpath, second_object_rpath_two, second_object_stringify, third_object, third_object_result, third_object_rpath, userRakeFinalize, user_like2_result, user_like_rake_rule, user_like_rake_rule2, users, users_finalize_result;
+    var first_object, first_object_result, first_object_rpath, get_filtered_object_stringify, get_first_object_stringify, get_second_object_stringify, get_third_object_rpath, get_user_like_rake_rule2, object_td, second_object, second_object_result, second_object_result_two, second_object_rpath, second_object_rpath_two, stringify_filter, third_object, third_object_result, userRakeFinalize, user_like2_result, user_like_rake_rule, users, users_finalize_result;
     object_td = null;
     first_object_rpath = '^([^.]+\\.)([^.]+)$';
     first_object = {
@@ -25,7 +25,13 @@ Its so wrong, but its OK for test
       second: 'two',
       third: 'three'
     };
-    first_object_stringify = ['firs.one', 'second.two', 'third.three'];
+    get_first_object_stringify = function(internal_dot) {
+      var first_object_stringify;
+      first_object_stringify = ['firs.one', 'second.two', 'third.three'];
+      return _.map(first_object_stringify, function(item) {
+        return item.replace(/\./g, internal_dot);
+      });
+    };
     first_object_result = {
       one: ['firs'],
       two: ['second'],
@@ -37,7 +43,13 @@ Its so wrong, but its OK for test
       second: ['four', 'five'],
       third: ['six', ['seven']]
     };
-    second_object_stringify = ['first.0.one', 'first.1.two', 'first.2.three', 'second.0.four', 'second.1.five', 'third.0.six', 'third.1.0.seven'];
+    get_second_object_stringify = function(internal_dot) {
+      var second_object_stringify;
+      second_object_stringify = ['first.0.one', 'first.1.two', 'first.2.three', 'second.0.four', 'second.1.five', 'third.0.six', 'third.1.0.seven'];
+      return _.map(second_object_stringify, function(item) {
+        return item.replace(/\./g, internal_dot);
+      });
+    };
     second_object_result = {
       one: ['first.0'],
       two: ['first.1'],
@@ -50,12 +62,16 @@ Its so wrong, but its OK for test
     second_object_result_two = {
       seven: ['third.1.0']
     };
-    third_object_rpath = function(stringifyed_item, emit) {
-      var mached_data;
-      if (mached_data = stringifyed_item.match(/^([^.]+\.[^.]+)\.([^.]+)$/)) {
-        emit(mached_data[2], mached_data[1]);
-      }
-      return null;
+    get_third_object_rpath = function(regexp_transform_fn) {
+      var transformed_regexp;
+      transformed_regexp = regexp_transform_fn(/^([^.]+\.[^.]+)\.([^.]+)$/);
+      return function(stringifyed_item, emit) {
+        var mached_data;
+        if (mached_data = stringifyed_item.match(transformed_regexp)) {
+          emit(mached_data[2], mached_data[1]);
+        }
+        return null;
+      };
     };
     third_object = {
       first: ['one', 'two', 'three'],
@@ -95,9 +111,9 @@ Its so wrong, but its OK for test
       }
     ];
     user_like_rake_rule = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$';
-    userRakeFinalize = function(users_list) {
-      return _.map(users_list, function(user_id) {
-        return users[user_id].name;
+    userRakeFinalize = function(key, value, emit) {
+      return _.map(value, function(user_id) {
+        return emit(key, users[user_id].name);
       });
     };
     users_finalize_result = {
@@ -113,13 +129,17 @@ Its so wrong, but its OK for test
       'шоппинг': ['Маша'],
       'теннис': ['Абдулла']
     };
-    user_like_rake_rule2 = function(stringifyed_item, emit) {
-      var mached_data;
-      if (mached_data = stringifyed_item.match(/^(\d+)\.name\.([^.]+)$/)) {
-        return _(users[mached_data[1]].frends).each(function(item) {
-          return emit(mached_data[2], item);
-        });
-      }
+    get_user_like_rake_rule2 = function(regexp_transform_fn) {
+      var transformed_regexp;
+      transformed_regexp = regexp_transform_fn(/^(\d+)\.name\.([^.]+)$/);
+      return function(stringifyed_item, emit) {
+        var mached_data;
+        if (mached_data = stringifyed_item.match(transformed_regexp)) {
+          return _(users[mached_data[1]].frends).each(function(item) {
+            return emit(mached_data[2], item);
+          });
+        }
+      };
     };
     user_like2_result = {
       'Вася': ['Петя', 'Коля'],
@@ -127,6 +147,18 @@ Its so wrong, but its OK for test
       'Коля': ['Абдулла', 'Маша', 'Вася'],
       'Маша': ['Коля', 'Абдулла'],
       'Абдулла': ['Коля', 'Петя', 'Маша']
+    };
+    stringify_filter = {
+      origin_pattern: /^\d+\.$/,
+      element_name: 'like',
+      apply_on_depth: 1
+    };
+    get_filtered_object_stringify = function(internal_dot) {
+      var filtered_object_stringify;
+      filtered_object_stringify = ['0.like.0.пицца', '0.like.1.BMX', '0.like.2.рэп', '1.like.0.пицца', '1.like.1.скейт', '1.like.2.soul', '2.like.0.пиво', '2.like.1.шансон', '3.like.0.овощи', '3.like.1.soul', '3.like.2.этника', '3.like.3.шоппинг', '4.like.0.пицца', '4.like.1.теннис', '4.like.2.этника'];
+      return _.map(filtered_object_stringify, function(item) {
+        return item.replace(/\./g, internal_dot);
+      });
     };
     describe('new()', function() {
       it('should return TinyData object on void call', function() {
@@ -148,7 +180,9 @@ Its so wrong, but its OK for test
         return object_td.rakeUp(second_object_rpath).should.be.a.eql(second_object_result);
       });
       it('should correct work with doubled-value object and function as rake rule', function() {
+        var third_object_rpath;
         object_td = new TinyData(third_object);
+        third_object_rpath = get_third_object_rpath(object_td.doTransormRegExp);
         return object_td.rakeUp(third_object_rpath).should.be.a.eql(third_object_result);
       });
       it('should correct work with cached stringifyed results', function() {
@@ -162,8 +196,9 @@ Its so wrong, but its OK for test
         return users_engine.rakeUp(user_like_rake_rule, userRakeFinalize).should.be.a.eql(users_finalize_result);
       });
       it('should correct work with data changed rake rule function', function() {
-        var users_engine;
+        var user_like_rake_rule2, users_engine;
         users_engine = new TinyData(users);
+        user_like_rake_rule2 = get_user_like_rake_rule2(users_engine.doTransormRegExp);
         return users_engine.rakeUp(user_like_rake_rule2).should.be.a.eql(user_like2_result);
       });
       it('should throw error on void call', function() {
@@ -193,12 +228,22 @@ Its so wrong, but its OK for test
         return object_td.rakeStringify().should.be.a.eql([]);
       });
       it('should return correct value for plain object', function() {
+        var first_object_string;
         object_td = new TinyData(first_object);
-        return object_td.rakeStringify().should.be.a.eql(first_object_stringify);
+        first_object_string = get_first_object_stringify(object_td.getPathDelimiter('internal'));
+        return object_td.rakeStringify().should.be.a.eql(first_object_string);
       });
-      return it('should return correct value for deep object', function() {
+      it('should return correct value for deep object', function() {
+        var second_object_string;
         object_td = new TinyData(second_object);
-        return object_td.rakeStringify().should.be.a.eql(second_object_stringify);
+        second_object_string = get_second_object_stringify(object_td.getPathDelimiter('internal'));
+        return object_td.rakeStringify().should.be.a.eql(second_object_string);
+      });
+      return it('should correcty apply stringification filter', function() {
+        var user_filtered_string, users_engine;
+        users_engine = new TinyData(users);
+        user_filtered_string = get_filtered_object_stringify(users_engine.getPathDelimiter('internal'));
+        return users_engine.rakeStringify(stringify_filter).should.be.a.eql(user_filtered_string);
       });
     });
   });

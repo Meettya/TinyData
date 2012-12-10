@@ -14,6 +14,21 @@ timeOnDemand = (label, methodBody) ->
     console.timeEnd label if @_do_timing_
     __rval__
 
+###
+Cache mechanism for stringify
+###
+cacheStringify = (methodBody) ->
+  (in_stringify_filter, in_stubs_list)->
+    stringy_filter = @_stringification_rule.stringify_filter
+    stringify_stub_list = @_stringification_rule.stubs_list
+    if not @_cache_stringifyed_object_? or not _.isEqual(in_stringify_filter, stringy_filter) or not _.isEqual in_stubs_list, stringify_stub_list
+      console.log 'stringify cache miss' if @_do_logging_
+      [stringy_filter, stringify_stub_list] = [in_stringify_filter, in_stubs_list]
+      @_cache_stringifyed_object_ = methodBody.call this, in_stringify_filter, in_stubs_list
+    else
+      console.log 'stringify cache hit' if @_do_logging_
+      @_cache_stringifyed_object_
+
 
 # resolve require from [window] or by require() 
 # use _.isPlainObject(x) to speedup type resolution
@@ -30,6 +45,9 @@ class TinyData
     @_stringification_rule = 
       stubs_list        : []    # nodes list, witch context will be replaced by __STUB__ 
       stringify_filter  : null  # rule to add to stringificated object ONLY matched nodes
+      apply_on_depth    : null  # level, where stringify_filter must be applied 
+    # this is our seatbelt for long texts - do not put it into index
+    @_max_text_long_ = 120
 
     # debug turn on some switches
     if @_options_.debug? and @_options_.debug is on
@@ -60,15 +78,6 @@ class TinyData
     # to transform path delimiter  
     @_dot_forger_ = new RegExpDotForger @getPathDelimiter('internal'), log : @_do_logging_
 
-  getPathDelimiter : (type) ->
-    switch type.toUpperCase()
-      when 'INTERNAL' then @_dot_.internal
-      when 'EXTERNAL' then @_dot_.external
-      else 
-        throw Error """
-                    so far don`t know path delimiter, named |#{type}|, mistype?
-                    """
-
   ###
   This is #rakeUp() job - map through all stringifyed object and do some thing,
   then may do some finalization code
@@ -78,7 +87,7 @@ class TinyData
     [rake_rule_type, rake_rule] = @_argParser in_rake_rule, 'rake_rule'
     rake_function = @_buildRakeFunction rake_rule_type, rake_rule
     # Now Cached
-    @_cache_stringifyed_object_ ?= @rakeStringify()
+    @rakeStringify @_stringification_rule.stringify_filter, @_stringification_rule.stubs_list
     
     raked_object = @_proceedRake rake_function 
 
@@ -92,15 +101,37 @@ class TinyData
   This method stringify our original object (materialize full path + add leaf )
   may be used to speed up all by reduce stringification work
   ###
-  # TODO ! do cache invalidation and parameter passing
-  rakeStringify : ( timeOnDemand 'rakeStringify', (stringify_filter, stubs_list = []) ->
-    @_cache_stringifyed_object_ ?= @_doStringify stringify_filter, stubs_list
-    )
+  # TODO! parameter validator
+  rakeStringify : ( cacheStringify ( timeOnDemand 'rakeStringify', (in_stringify_filter, in_stubs_list = []) ->
+    @_doStringify in_stringify_filter, in_stubs_list
+    ))
+
+  ###
+  This method transform incoming RegExp changes \. (dot) to internal dot-substituter 
+  ###
+  doTransormRegExp: (original_regexp) =>
+    # if it obsolete - don`t convert
+    unless -1 is original_regexp.source.indexOf @getPathDelimiter('internal')
+      if @_do_logging_ then console.log "doTransormRegExp: skip converting for |#{original_regexp}|"
+      return original_regexp
+
+    @_dot_forger_.doForgeDots original_regexp       
+
+  ###
+  This method may be used for user-defined function
+  ###
+  getPathDelimiter : (type) ->
+    switch type.toUpperCase()
+      when 'INTERNAL' then @_dot_.internal
+      when 'EXTERNAL' then @_dot_.external
+      else 
+        throw Error """
+                    so far don`t know path delimiter, named |#{type}|, mistype?
+                    """
 
   ###
   That's all, folks!
-  Just few methods :)
-  May be I will add one more - mapUp
+  Just few public methods :)
   ###
 
   ###
@@ -174,18 +205,6 @@ class TinyData
   _proceedRake: ( timeOnDemand 'proceedRake', (rake_function) ->
     raked_object = rake_function @_cache_stringifyed_object_
     )
-
-  ###
-  This method transform incoming RegExp changes \. (dot) to internal dot-substituter
-  Method 
-  ###
-  doTransormRegExp: (original_regexp) =>
-    # if it obsolete - don`t convert
-    unless -1 is original_regexp.source.indexOf @getPathDelimiter('internal')
-      if @_do_logging_ then console.log "doTransormRegExp: skip converting for |#{original_regexp}|"
-      return original_regexp
-
-    @_dot_forger_.doForgeDots original_regexp       
 
   ###
   This method return rake function itself, its different for 
@@ -289,6 +308,14 @@ class TinyData
       else 
         yes
 
+    # this is filter for string elements
+    string_filter = (full_elem_path, elem_content, elem_depth) =>
+      elem_length = elem_content.length
+      unless elem_length > @_max_text_long_
+        "#{full_elem_path}#{elem_content}"
+      else
+        "#{full_elem_path}__LONG_TEXT__|#{elem_length}|"
+
     # its filter itself, assembled and ready to fire
     is_filter_passed = if stringify_rule? then filter_body else -> yes
     dot_sign = @getPathDelimiter('internal')
@@ -301,8 +328,10 @@ class TinyData
         when 'ARRAY'
           for value, idx in in_obj when is_filter_passed prefix, idx, depth
             innner_loop value, "#{prefix}#{idx}#{dot_sign}", depth + 1
-        when 'PLAIN', 'STRING'
+        when 'PLAIN'
           result_array.push "#{prefix}#{in_obj}"
+        when 'STRING'
+          result_array.push string_filter prefix, in_obj, depth
         when 'DATE', 'REGEXP'
           result_array.push "#{prefix}__#{in_obj_type}__|#{in_obj}|__"
         else

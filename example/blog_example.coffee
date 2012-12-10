@@ -6,25 +6,28 @@ _ = require 'lodash'
 _.forOwn require.cache, (val,key) -> delete require.cache[key]
 TinyData = require '../src/tinydata'
 
-console.log "\n---OK----"
-
-
 blog_data = require './blog_example_data'
 
 console.log "\n-----START-----\n"
 
 comments_raitings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/
 
-object_td = new TinyData blog_data, debug : yes
+comments_finalizer = (key, values, emit) -> 
+  _.each values, (item) -> emit Math.ceil(key), item
 
-stringifyed_data = object_td.rakeStringify()
+object_td = new TinyData blog_data #, debug : yes
+comments_raitings = object_td.rakeUp comments_raitings_rule, comments_finalizer
 
-#console.log stringifyed_data
-
-comments_raitings = object_td.rakeUp comments_raitings_rule
-
-console.log ""
+console.log "\n Raitings for all comments"
 console.log comments_raitings
 
-console.log "\n---OK----\n"
+# get all comments by posts
+comments_by_post_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
+
+comments_by_post = object_td.rakeUp comments_by_post_rule
+
+console.log "\n Comments for every post"
+console.log comments_by_post
+
+console.log "\n---END----\n"
 

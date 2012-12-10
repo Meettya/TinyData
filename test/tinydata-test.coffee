@@ -193,6 +193,33 @@ describe 'TinyData:', ->
     'Маша': [ 'Коля', 'Абдулла' ]
     'Абдулла': [ 'Коля', 'Петя', 'Маша' ]
 
+  stringify_filter = 
+    origin_pattern  : /^\d+\.$/
+    element_name    : 'like'
+    apply_on_depth  : 1
+
+  get_filtered_object_stringify = (internal_dot) ->
+    filtered_object_stringify = [
+      '0.like.0.пицца'
+      '0.like.1.BMX'
+      '0.like.2.рэп'
+      '1.like.0.пицца'
+      '1.like.1.скейт'
+      '1.like.2.soul'
+      '2.like.0.пиво'
+      '2.like.1.шансон'
+      '3.like.0.овощи'
+      '3.like.1.soul'
+      '3.like.2.этника'
+      '3.like.3.шоппинг'
+      '4.like.0.пицца'
+      '4.like.1.теннис'
+      '4.like.2.этника' 
+    ]
+
+    _.map filtered_object_stringify, (item) -> item.replace /\./g, internal_dot
+
+
   describe 'new()', ->
 
     it 'should return TinyData object on void call', ->
@@ -229,7 +256,7 @@ describe 'TinyData:', ->
 
     it 'should correct work with data changed rake rule function', ->
       users_engine = new TinyData users
-      user_like_rake_rule2 = get_user_like_rake_rule2 object_td.doTransormRegExp
+      user_like_rake_rule2 = get_user_like_rake_rule2 users_engine.doTransormRegExp
       users_engine.rakeUp(user_like_rake_rule2).should.be.a.eql user_like2_result
 
     it 'should throw error on void call', ->
@@ -260,3 +287,10 @@ describe 'TinyData:', ->
       second_object_string = get_second_object_stringify object_td.getPathDelimiter 'internal'
       object_td.rakeStringify().should.be.a.eql second_object_string
   
+    it 'should correcty apply stringification filter', ->
+      users_engine = new TinyData users
+      user_filtered_string = get_filtered_object_stringify users_engine.getPathDelimiter 'internal'
+      users_engine.rakeStringify(stringify_filter).should.be.a.eql user_filtered_string
+
+
+

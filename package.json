@@ -1,7 +1,7 @@
 {
   "name": "TinyData",
-  "version": "0.1.4",
-  "description": "Tiny data mining engine, with naive map-reduce logic",
+  "version": "0.2.2",
+  "description": "Tiny data mining engine, with path materialization and naive map-reduce logic",
   "main": "index.js",
   "repository": "",
   "keywords": [
@@ -24,8 +24,7 @@
       "uglify-js" : "latest",
       "fs-extra" : "latest",
       "async" : "latest",
-      "lodash" : "latest",
-      "look" : "latest"
+      "lodash" : "latest"
   },
   "scripts": {
       "test": "cake test_coffee"
