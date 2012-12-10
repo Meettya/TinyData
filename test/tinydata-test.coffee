@@ -20,11 +20,17 @@ describe 'TinyData:', ->
     second : 'two'
     third  : 'three'
 
-  first_object_stringify = [
-    'firs.one'
-    'second.two'
-    'third.three'
-  ]
+  # we are MUST convert path delimiter to internal state
+  get_first_object_stringify = (internal_dot) ->
+
+    first_object_stringify = [
+      'firs.one'
+      'second.two'
+      'third.three'
+    ]
+
+    _.map first_object_stringify, (item) -> item.replace /\./g, internal_dot
+
 
   first_object_result = 
     one: [ 'firs' ]
@@ -49,15 +55,20 @@ describe 'TinyData:', ->
       ['seven']
     ]
 
-  second_object_stringify = [
-    'first.0.one'
-    'first.1.two'
-    'first.2.three'
-    'second.0.four'
-    'second.1.five'
-    'third.0.six'
-    'third.1.0.seven'
-  ]
+  get_second_object_stringify = (internal_dot) ->
+
+    second_object_stringify = [
+      'first.0.one'
+      'first.1.two'
+      'first.2.three'
+      'second.0.four'
+      'second.1.five'
+      'third.0.six'
+      'third.1.0.seven'
+    ]
+
+    _.map second_object_stringify, (item) -> item.replace /\./g, internal_dot
+
 
   second_object_result = 
     one   : [ 'first.0'  ]
@@ -72,10 +83,13 @@ describe 'TinyData:', ->
   second_object_result_two =
     seven : ['third.1.0']
 
-  third_object_rpath = (stringifyed_item, emit) ->
-    if mached_data = stringifyed_item.match /^([^.]+\.[^.]+)\.([^.]+)$/
-      emit mached_data[2], mached_data[1]
-    null
+  get_third_object_rpath = (regexp_transform_fn) ->
+    transformed_regexp = regexp_transform_fn /^([^.]+\.[^.]+)\.([^.]+)$/
+    
+    (stringifyed_item, emit) ->
+      if mached_data = stringifyed_item.match transformed_regexp
+        emit mached_data[2], mached_data[1]
+      null
 
   third_object = 
     first : [
@@ -148,8 +162,8 @@ describe 'TinyData:', ->
   user_like_rake_rule = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$'
 
   # Substitute position in array to names
-  userRakeFinalize = (users_list) -> 
-    _.map users_list, (user_id) -> users[user_id].name
+  userRakeFinalize = (key, value, emit) -> 
+    _.map value, (user_id) -> emit key, users[user_id].name
 
   users_finalize_result = 
     'пицца': [ 'Вася', 'Петя', 'Абдулла' ]
@@ -164,10 +178,13 @@ describe 'TinyData:', ->
     'шоппинг': [ 'Маша' ]
     'теннис': [ 'Абдулла' ]
 
-  user_like_rake_rule2 = (stringifyed_item, emit) ->
-    if mached_data = stringifyed_item.match /^(\d+)\.name\.([^.]+)$/
-      _(users[mached_data[1]].frends).each (item) -> 
-        emit mached_data[2], item
+  get_user_like_rake_rule2 = (regexp_transform_fn) ->
+    transformed_regexp = regexp_transform_fn /^(\d+)\.name\.([^.]+)$/
+    
+    (stringifyed_item, emit) ->
+      if mached_data = stringifyed_item.match transformed_regexp
+        _(users[mached_data[1]].frends).each (item) -> 
+          emit mached_data[2], item
 
   user_like2_result = 
     'Вася': [ 'Петя', 'Коля' ]
@@ -198,6 +215,7 @@ describe 'TinyData:', ->
 
     it 'should correct work with doubled-value object and function as rake rule', ->
       object_td = new TinyData third_object
+      third_object_rpath = get_third_object_rpath object_td.doTransormRegExp
       object_td.rakeUp(third_object_rpath).should.be.a.eql third_object_result
 
     it 'should correct work with cached stringifyed results', ->
@@ -210,7 +228,8 @@ describe 'TinyData:', ->
       users_engine.rakeUp(user_like_rake_rule, userRakeFinalize).should.be.a.eql users_finalize_result
 
     it 'should correct work with data changed rake rule function', ->
-      users_engine = new TinyData users    
+      users_engine = new TinyData users
+      user_like_rake_rule2 = get_user_like_rake_rule2 object_td.doTransormRegExp
       users_engine.rakeUp(user_like_rake_rule2).should.be.a.eql user_like2_result
 
     it 'should throw error on void call', ->
@@ -233,9 +252,11 @@ describe 'TinyData:', ->
 
     it 'should return correct value for plain object', ->
       object_td = new TinyData first_object
-      object_td.rakeStringify().should.be.a.eql first_object_stringify 
+      first_object_string = get_first_object_stringify object_td.getPathDelimiter 'internal'
+      object_td.rakeStringify().should.be.a.eql first_object_string 
 
     it 'should return correct value for deep object', ->
       object_td = new TinyData second_object
-      object_td.rakeStringify().should.be.a.eql second_object_stringify
+      second_object_string = get_second_object_stringify object_td.getPathDelimiter 'internal'
+      object_td.rakeStringify().should.be.a.eql second_object_string
   

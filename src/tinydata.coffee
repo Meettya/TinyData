@@ -7,16 +7,19 @@ work as mapReduce, but in some different way and use RegExp as path pointer
 ###
 Timing method decorator
 ###
-timingIfItNeeded = (label, methodBody) ->
+timeOnDemand = (label, methodBody) ->
   ->
     console.time label if @_do_timing_
     __rval__ = methodBody.apply this, arguments
     console.timeEnd label if @_do_timing_
     __rval__
 
+
 # resolve require from [window] or by require() 
 # use _.isPlainObject(x) to speedup type resolution
 _ = @_ ? require 'lodash'
+
+RegExpDotForger = require "./regexp_dot_forger"
 
 class TinyData 
 
@@ -28,9 +31,16 @@ class TinyData
       stubs_list        : []    # nodes list, witch context will be replaced by __STUB__ 
       stringify_filter  : null  # rule to add to stringificated object ONLY matched nodes
 
-    # for debugging and benchmarking
+    # debug turn on some switches
+    if @_options_.debug? and @_options_.debug is on
+       @_options_.timing  = on
+       @_options_.logging = on
+
+    # for benchmarking
     @_do_timing_ = if @_options_.timing? and @_options_.timing is on and console?.time? then yes else no
-    
+    # for debugging
+    @_do_logging_ = if @_options_.logging? and @_options_.logging is on and console?.log? then yes else no
+
     # hm, its actually is bad things, but I don`t know how do it well
     @_dot_ = 
       internal : "\uFE45"
@@ -47,8 +57,17 @@ class TinyData
       rakeStringify :
         convert_stringify_filter : yes  # take user RegExp (as string or RegExp)
                                         # and replace dots to @_as_dot_.internal
+    # to transform path delimiter  
+    @_dot_forger_ = new RegExpDotForger @getPathDelimiter('internal'), log : @_do_logging_
 
-
+  getPathDelimiter : (type) ->
+    switch type.toUpperCase()
+      when 'INTERNAL' then @_dot_.internal
+      when 'EXTERNAL' then @_dot_.external
+      else 
+        throw Error """
+                    so far don`t know path delimiter, named |#{type}|, mistype?
+                    """
 
   ###
   This is #rakeUp() job - map through all stringifyed object and do some thing,
@@ -70,11 +89,11 @@ class TinyData
       raked_object
 
   ###
-  This method stringify our original object
-  may be used to speed up all by reduce stringification work 
+  This method stringify our original object (materialize full path + add leaf )
+  may be used to speed up all by reduce stringification work
   ###
   # TODO ! do cache invalidation and parameter passing
-  rakeStringify : ( timingIfItNeeded 'rakeStringify', (stringify_filter, stubs_list = []) ->
+  rakeStringify : ( timeOnDemand 'rakeStringify', (stringify_filter, stubs_list = []) ->
     @_cache_stringifyed_object_ ?= @_doStringify stringify_filter, stubs_list
     )
 
@@ -124,11 +143,12 @@ class TinyData
   To separate logic of converting
   ###
   _buildResultConvertor : ->
-    dot_pattern = new RegExp @_dot_.internal, 'g'
+    dot_pattern = new RegExp @getPathDelimiter('internal'), 'g'
+    dot_symbol = @getPathDelimiter('external')
     (in_obj) =>
       for key in _.keys in_obj
         for item, idx in in_obj[key]
-          in_obj[key][idx] = in_obj[key][idx].replace dot_pattern, @_dot_.external
+          in_obj[key][idx] = in_obj[key][idx].replace dot_pattern, dot_symbol
 
       in_obj 
   
@@ -144,36 +164,28 @@ class TinyData
         finalized_rake_result[key] ?= []
         finalized_rake_result[key].push value
 
-    user_fn key, in_obj[key], emit for key in _.keys in_obj
+    user_fn.call this, key, in_obj[key], emit for key in _.keys in_obj
       
     finalized_rake_result
 
   ###
   Internal method for wrap timing 
   ###
-  _proceedRake: ( timingIfItNeeded 'proceedRake', (rake_function) ->
+  _proceedRake: ( timeOnDemand 'proceedRake', (rake_function) ->
     raked_object = rake_function @_cache_stringifyed_object_
     )
 
   ###
   This method transform incoming RegExp changes \. (dot) to internal dot-substituter
-  Oh, f*ck, it will be funny :(
+  Method 
   ###
-  _transormateRegExp: (original_regexp) ->
+  doTransormRegExp: (original_regexp) =>
+    # if it obsolete - don`t convert
+    unless -1 is original_regexp.source.indexOf @getPathDelimiter('internal')
+      if @_do_logging_ then console.log "doTransormRegExp: skip converting for |#{original_regexp}|"
+      return original_regexp
 
-    #!!!! количество обратных слешей в регулярке 
-    # при ее превращении в строку НЕ увеличивается
-    # забор сдвоенных обратных слешей - прикол только исходного ТЕКСТА
-
-    console.log /\dt\./.toString().match /\/\\dt\\\.\// 
-    console.log new RegExp 't\\\\.'
-    console.log new RegExp /t\./
-
-    console.log "in -> ", "#{original_regexp.toString()}"
-    result = new RegExp original_regexp.source.replace /\\\./g, @_dot_.internal
-    console.log "out ->", "#{result.source}"
-    result
-
+    @_dot_forger_.doForgeDots original_regexp       
 
   ###
   This method return rake function itself, its different for 
@@ -186,7 +198,7 @@ class TinyData
 
         # if incoming RegExp needed to be transformed
         if @_dot_decorator_settings_.rakeUp.convert_income_rake_regexp
-          rake_rule = @_transormateRegExp rake_rule
+          rake_rule = @doTransormRegExp rake_rule
 
         (in_array) ->
           rake_result = {}
@@ -200,7 +212,7 @@ class TinyData
           rake_result
 
       when 'FUNCTION'
-        (in_array) ->
+        (in_array) =>
           rake_result = {}
 
           # we are need some checking on data from user function
@@ -209,7 +221,7 @@ class TinyData
               rake_result[key] ?= []
               rake_result[key].push value
 
-          rake_rule item, emit for item in in_array
+          rake_rule.call this, item, emit for item in in_array
             
           rake_result
 
@@ -259,8 +271,13 @@ class TinyData
 
     # name matching rule with or without origins 
     name_matcher = if stringify_rule?.origin_pattern?
+      stringify_pattern = stringify_rule.origin_pattern
+      # if incoming RegExp needed to be transformed
+      if @_dot_decorator_settings_.rakeStringify.convert_stringify_filter
+        stringify_pattern = @doTransormRegExp stringify_pattern
+
       (matcher_elem_name, matcher_elem_origin) =>
-        matcher_elem_name is stringify_rule.element_name and stringify_rule.origin_pattern.test matcher_elem_origin
+        matcher_elem_name is stringify_rule.element_name and stringify_pattern.test matcher_elem_origin
     else
       (matcher_elem_name) =>
         matcher_elem_name is stringify_rule.element_name
@@ -274,7 +291,7 @@ class TinyData
 
     # its filter itself, assembled and ready to fire
     is_filter_passed = if stringify_rule? then filter_body else -> yes
-    dot_sign = @_dot_.internal
+    dot_sign = @getPathDelimiter('internal')
 
     innner_loop = (in_obj, prefix, depth ) =>
       switch in_obj_type = @_getItType in_obj
