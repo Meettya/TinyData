@@ -1,0 +1,42 @@
+div.navbar.navbar-inverse.navbar-fixed-top
+  div.navbar-inner
+    div.container
+      a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
+        span.icon-bar
+        span.icon-bar
+        span.icon-bar
+      a.brand(href="/")
+        | TinyData
+      div.nav-collapse.collapse
+        ul.nav
+          li
+            a(href="index.html")
+              | Home
+          li 
+            a(href="test.html")
+              | Test suite
+          li
+            a(href="#about")
+              | About
+          li
+            a(href="#contact")
+              | Contact
+
+// add active toggler to navbar
+:coffeescript
+  $ ->
+    page_path = /([^/]+)$/.exec @location.pathname
+    $(".nav li a[href='#{page_path[1]}']").parents('li').addClass 'active'
+    null
+
+
+
+
+
+
+
+
+
+
+
+

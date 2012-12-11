@@ -27,6 +27,9 @@ _.each paths, (value, key, list) -> list[key] = path.join root_path, value
 # add commands
 commands = require path.join paths.cake_dep, 'command'
 
+# add dev_server
+{dev_server} = require path.join paths.cake_dep, 'dev_server'
+
 ###
 Now tasks
 ###
@@ -56,12 +59,14 @@ task 'prepare_test_for_browser', 'create suite for test in browser', prepare_tes
       console.log "#{err}".error if err?
       console.log ' Browser: test suite ready!'.out
   
-  async.parallel [ prepare, build_test_browser_page, build_test_browser_js, copy_vendor_to_test_browser, copy_css_to_test_browser ]
+  async.parallel [ prepare, build_test_browser_page, build_test_browser_js, copy_vendor_to_test_browser, copy_css_to_test_browser, copy_bootstrap_to_test_browser ]
 
 task 'build_test_browser_page', 'build html form jade for browser', build_test_browser_page = (cb) ->
   commands.compile_jade cb, path.join(paths.develop_dir, 'views'), paths.test_browser_dir
 
-
+task 'start_dev_server', 'start developer server', start_dev_server = (cb) ->
+  dev_server project_name, project_file_name, root_path
+ 
 ###
 EX-task below, now just function
 ###
@@ -96,3 +101,7 @@ copy_css_to_test_browser = (cb) ->
   css_dir = path.join paths.develop_dir, 'public', 'css'
   commands.copy_dir cb,css_dir, path.join(paths.test_browser_dir, 'css')
 
+#task 'copy_css_to_test_browser', 'copy css to browser test', 
+copy_bootstrap_to_test_browser = (cb) ->
+  css_dir = path.join paths.develop_dir, 'public', 'bootstrap'
+  commands.copy_dir cb,css_dir, path.join(paths.test_browser_dir, 'bootstrap')
