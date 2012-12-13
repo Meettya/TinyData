@@ -1,9 +1,149 @@
 extends includes/layout
 
 block content
+
+  :coffeescript
+    code_example_1 = [
+      {
+        "title" : "ante sit ipsum porttitor lacus"
+        "rating" : "4.4986496101818085"
+        "author" :
+          "name" : "Caleb, Bell"
+          "_id" : "U9vM7nB6sT2zT4lJ7eP4fQ6f"
+        "text" : "adipiscing pulvinar nec vitae libero nullam placerat vestibulum"
+        "comments" : [
+            {
+              "rating" : "4.4986496101818085"
+              "author" :
+                "name" : "Justin, Patterson"
+                "_id" : "T2dK2hQ8oE4cT1pD5dK7iO5p"
+              "text" : "amet vitae sollicitudin facilisis dolor"
+              "comments" : [
+                  {
+                    "rating" : "2.474840125502485"
+                    "author" :
+                      "name" : "Layla, Bryant"
+                      "_id" : "Y0uN9aY8fE0pT1yY6xT2hD7l"
+                    "text" : "lacus mattis placerat etiam sit magna"
+                    "comments" : [ ]
+                  }
+                ]
+            }
+            {
+              "rating" : "2.474840125502485"
+              "author" :
+                "name" : "Layla, Bryant"
+                "_id" : "Y0uN9aY8fE0pT1yY6xT2hD7l"
+              "text" : "lacus mattis placerat etiam sit magna"
+              "comments" : [ ]
+            }
+          ]
+      }
+      {
+        "title" : "ante sit ipsum porttitor lacus"
+        "rating" : "4.4986496101818085"
+        "author" :
+          "name" : "Caleb, Bell"
+          "_id" : "U9vM7nB6sT2zT4lJ7eP4fQ6f"
+        "text" : "adipiscing pulvinar nec vitae libero nullam placerat vestibulum"
+        "comments" : [ ]
+      }  
+    ]
+
+    code_example_2 =
+      '1': [ 
+        '1.comments.0',
+        '3.comments.1',
+        '3.comments.1.comments.1'
+        ]
+      '2': [ 
+        '0.comments.0.comments.1'
+        '0.comments.0.comments.1.comments.0.comments.0'
+        '1.comments.1.comments.0' 
+        ]
+      '3': [ 
+        '0.comments.0.comments.0',
+        '0.comments.0.comments.2.comments.0',
+        '1.comments.1',
+        '3.comments.0.comments.0' 
+        ]
+      '4': [ 
+        '0.comments.0.comments.2'
+        '3.comments.0' 
+        ]
+      '5': [ 
+        '0.comments.0',
+        '0.comments.0.comments.1.comments.0',
+        '3.comments.1.comments.0' 
+        ]
+
+    $ ->
+      $(".example_1").children().text JSON.stringify code_example_1, null, 2
+      $(".example_2").children().text JSON.stringify code_example_2, null, 2
+
+      prettyPrint()
+      null
+
   div.container
     h1 TinyData project
-    p Hello World
+    
+    div.span8
+      p
+        strong TinyData
+        |  предназначен для работы с неструктурированными данными 
+        | произвольной глубины вложения.
+      p
+        | Источником таких данных может быть, документ-ориентированнная
+        | DB, например 
+        strong MongoDB
+        |  или любой иной источник 
+        strong JSON
+        |  данных.
+
+    div.span10 
+      p
+        a(href="#", data-toggle="collapse", data-target=".example_1" ) упрощенный пример тестового объекта...
+      div.example_1.collapse
+        pre.prettyprint.pre-scrollable
+
+    div.span8
+      h2 Решаемые инструментом задачи
+      p
+        strong TinyData 
+        |  упрощает взаимодействие с вложенными данными, помогая осуществлять 
+        | поиск и агрегирование используя относительно простой интерфейс.
+
+    div.span8
+      h2 Технологии
+      p 
+        | Фактически 
+        strong TinyData
+        |  подготавливает (и кеширует) материализованные пути для переданного
+        | объекта, позволяя стоить над ними запросы как с обычными текстовыми данными.
+      
+      p
+        | В самом простом варианте для формирования запроса применяются 
+        | регулярные выражения.
+
+    div.span8
+      p Запрос для получения рейтинга каждого комментария выглядит так:
+      pre.prettyprint  /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/
+
+    div.span10 
+      p
+        a(href="#", data-toggle="collapse", data-target=".example_2" ) фрагмент ответа...
+      div.example_2.collapse
+        pre.prettyprint
+    
+    div.span8
+      p 
+        | Посмотреть полный код 
+        a(href="examples.html#rating") агрегирования рейтинга
+        |  можно в разделе 
+        a(href='examples.html')Примеры
+        | .
+
+
 
 
 

@@ -572,23 +572,31 @@ Timing method decorator
       };
       dot_sign = this.getPathDelimiter('internal');
       innner_loop = function(in_obj, prefix, depth) {
-        var idx, in_obj_type, key, value, _i, _j, _len, _len1, _ref1;
+        var idx, in_obj_type, key, obj_keys, value, _i, _j, _len, _len1;
         switch (in_obj_type = _this._getItType(in_obj)) {
           case 'HASH':
-            _ref1 = _.keys(in_obj);
-            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-              key = _ref1[_i];
-              if (is_filter_passed(prefix, key, depth)) {
-                innner_loop(in_obj[key], "" + prefix + key + dot_sign, depth + 1);
+            obj_keys = _.keys(in_obj);
+            if (obj_keys.length) {
+              for (_i = 0, _len = obj_keys.length; _i < _len; _i++) {
+                key = obj_keys[_i];
+                if (is_filter_passed(prefix, key, depth)) {
+                  innner_loop(in_obj[key], "" + prefix + key + dot_sign, depth + 1);
+                }
               }
+            } else {
+              innner_loop("__EMPTY__|HASH|", "" + prefix, depth);
             }
             break;
           case 'ARRAY':
-            for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
-              value = in_obj[idx];
-              if (is_filter_passed(prefix, idx, depth)) {
-                innner_loop(value, "" + prefix + idx + dot_sign, depth + 1);
+            if (in_obj.length) {
+              for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
+                value = in_obj[idx];
+                if (is_filter_passed(prefix, idx, depth)) {
+                  innner_loop(value, "" + prefix + idx + dot_sign, depth + 1);
+                }
               }
+            } else {
+              innner_loop("__EMPTY__|ARRAY|", "" + prefix, depth);
             }
             break;
           case 'PLAIN':

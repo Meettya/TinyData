@@ -90,6 +90,18 @@ copy_dir = (cb, source_dir, result_dir) ->
     console.log " -> directory |#{result_dirname}| copy done".info
     cb() if typeof cb is 'function'
 
+build_json = (cb, source_dir, result_dir, filter) ->
+  files = make_files_list source_dir, filter
+  for file in files
+    filename = path.basename file, '.coffee'
+    result_filename = path.join result_dir, "#{filename}.json"
+    data = JSON.stringify require(file), null, 2
+    fs.writeFile result_filename, data, encoding='utf8', (err) ->
+      throw err if err?
+      console.log " -> json file |#{filename}| build done".info
+      cb() if typeof cb is 'function'    
+
+
 module.exports = 
   build_coffee        : build_coffee
   test_coffee         : test_coffee
@@ -97,4 +109,5 @@ module.exports =
   minify_browser_lib  : minify_browser_lib
   compile_jade        : compile_jade
   copy_dir            : copy_dir
+  build_json          : build_json
 

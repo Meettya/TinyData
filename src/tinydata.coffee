@@ -323,11 +323,18 @@ class TinyData
     innner_loop = (in_obj, prefix, depth ) =>
       switch in_obj_type = @_getItType in_obj
         when 'HASH'
-          for key in _.keys in_obj when is_filter_passed prefix, key, depth
-            innner_loop in_obj[key], "#{prefix}#{key}#{dot_sign}", depth + 1
+          obj_keys = _.keys in_obj
+          if obj_keys.length
+            for key in obj_keys when is_filter_passed prefix, key, depth
+              innner_loop in_obj[key], "#{prefix}#{key}#{dot_sign}", depth + 1
+          else
+            innner_loop "__EMPTY__|HASH|", "#{prefix}", depth
         when 'ARRAY'
-          for value, idx in in_obj when is_filter_passed prefix, idx, depth
-            innner_loop value, "#{prefix}#{idx}#{dot_sign}", depth + 1
+          if in_obj.length
+            for value, idx in in_obj when is_filter_passed prefix, idx, depth
+              innner_loop value, "#{prefix}#{idx}#{dot_sign}", depth + 1
+          else 
+            innner_loop "__EMPTY__|ARRAY|", "#{prefix}", depth
         when 'PLAIN'
           result_array.push "#{prefix}#{in_obj}"
         when 'STRING'

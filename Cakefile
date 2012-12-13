@@ -20,6 +20,7 @@ paths =
   test_dir          : 'test'
   develop_dir       : 'develop_suite'
   test_browser_dir  : 'test_browser'
+  example_dir       : 'example'
 
 # extend path with root
 _.each paths, (value, key, list) -> list[key] = path.join root_path, value
@@ -35,7 +36,7 @@ Now tasks
 ###
 
 task 'pre_commit', 'build all before commit', pre_commit = (cb) ->
-  async.series [ test_coffee, build_lib_node, prepare_test_for_browser ], (err) ->
+  async.series [ test_coffee, build_lib_node, prepare_all_for_browser ], (err) ->
       console.log "#{err}".error if err?
       console.log ' Pre-commit: all done!'.out
 
@@ -52,16 +53,18 @@ task 'compile_for_browser', 'compile module for use in browser', compile_for_bro
     console.log "#{err}".error if err?
     console.log ' Browser: all done!'.out
       
-task 'prepare_test_for_browser', 'create suite for test in browser', prepare_test_for_browser = (cb) ->
+task 'prepare_all_for_browser', 'create suite for test in browser, build docs', prepare_all_for_browser = (cb) ->
 
   prepare = (cb) ->
     async.series [ test_coffee, build_lib_browser, minify_lib_browser, copy_lib_to_test_browser ], (err) ->
       console.log "#{err}".error if err?
       console.log ' Browser: test suite ready!'.out
   
-  async.parallel [ prepare, build_test_browser_page, build_test_browser_js, copy_vendor_to_test_browser, copy_css_to_test_browser, copy_bootstrap_to_test_browser ]
+  async.parallel [ prepare, build_html_browser_page, build_test_browser_js, 
+    copy_vendor_to_test_browser, copy_css_to_test_browser,
+    copy_bootstrap_to_test_browser, build_example_data  ]
 
-task 'build_test_browser_page', 'build html form jade for browser', build_test_browser_page = (cb) ->
+task 'build_html_browser_page', 'build html form jade for browser', build_html_browser_page = (cb) ->
   commands.compile_jade cb, path.join(paths.develop_dir, 'views'), paths.test_browser_dir
 
 task 'start_dev_server', 'start developer server', start_dev_server = (cb) ->
@@ -105,3 +108,7 @@ copy_css_to_test_browser = (cb) ->
 copy_bootstrap_to_test_browser = (cb) ->
   css_dir = path.join paths.develop_dir, 'public', 'bootstrap'
   commands.copy_dir cb,css_dir, path.join(paths.test_browser_dir, 'bootstrap')
+
+#task 'build_example_data', 'build_example_data', 
+build_example_data = (cb) ->
+  commands.build_json cb, paths.example_dir, path.join(paths.test_browser_dir, 'example'), /_data.coffee$/

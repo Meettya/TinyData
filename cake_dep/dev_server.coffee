@@ -10,19 +10,20 @@ coffee    = require 'coffee-script'
 require './colorizer'
 
 # read coffee, than compile and return result
-read_and_compile_to_coffee = (root_path, file_name, cb) ->
-  fs.readFile (path.join root_path, 'test', "#{file_name}.coffee"), 'utf8', (err, data) ->
+read_and_compile_from_coffee = (root_path, dir_name, file_name, cb) ->
+  fs.readFile (path.join root_path, dir_name, "#{file_name}.coffee"), 'utf8', (err, data) ->
     throw err if err
     cb coffee.compile data
+
+# require data and return it for JSON
+require_and_return_data = (root_path, dir_name, file_name) ->
+  data = require path.join root_path, dir_name, "#{file_name}.coffee"
 
 
 ###
 This function create developer server to work with project or docs
 ###
 dev_server = (project_name, file_name, root_path) ->
-
-  # hm, its works :)
-  # routes = require path.join root_path, 'develop_suite', 'routes'
 
   port = process.env.PORT or 3000
 
@@ -63,9 +64,16 @@ dev_server = (project_name, file_name, root_path) ->
   # this is our test files
   app.get '/test/:filename', (req, res) -> 
     [filename, ext] = req.param('filename').split '.'
-    read_and_compile_to_coffee root_path, filename, (data) =>
+    read_and_compile_from_coffee root_path, 'test', filename, (data) =>
       res.type 'application/json'
       res.send data
+
+  # this is our example files
+  app.get '/example/:filename', (req, res) -> 
+    [filename, ext] = req.param('filename').split '.'
+    data = require_and_return_data root_path, 'example', filename,
+    res.type 'application/json'
+    res.send data
 
 
   # our widget

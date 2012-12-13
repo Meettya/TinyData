@@ -225,7 +225,7 @@ Its so wrong, but its OK for test
     return describe('#rakeStringify()', function() {
       it('should return empty array on empty object', function() {
         object_td = new TinyData;
-        return object_td.rakeStringify().should.be.a.eql([]);
+        return object_td.rakeStringify().should.be.a.eql(['__EMPTY__|HASH|']);
       });
       it('should return correct value for plain object', function() {
         var first_object_string;

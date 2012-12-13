@@ -275,7 +275,7 @@ describe 'TinyData:', ->
 
     it 'should return empty array on empty object', ->
       object_td = new TinyData
-      object_td.rakeStringify().should.be.a.eql []   
+      object_td.rakeStringify().should.be.a.eql ['__EMPTY__|HASH|']   
 
     it 'should return correct value for plain object', ->
       object_td = new TinyData first_object
