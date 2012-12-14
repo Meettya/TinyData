@@ -170,47 +170,47 @@ Its so wrong, but its OK for test
         return object_td.should.be.an["instanceof"](TinyData);
       });
     });
-    describe('#rakeUp()', function() {
+    describe('#sortOutVerso()', function() {
       it('should correct work with plain object and string as rake rule', function() {
         object_td = new TinyData(first_object);
-        return object_td.rakeUp(first_object_rpath).should.be.a.eql(first_object_result);
+        return object_td.sortOutVerso(first_object_rpath).should.be.a.eql(first_object_result);
       });
       it('should correct work with deep object and RegExp as rake rule', function() {
         object_td = new TinyData(second_object);
-        return object_td.rakeUp(second_object_rpath).should.be.a.eql(second_object_result);
+        return object_td.sortOutVerso(second_object_rpath).should.be.a.eql(second_object_result);
       });
       it('should correct work with doubled-value object and function as rake rule', function() {
         var third_object_rpath;
         object_td = new TinyData(third_object);
         third_object_rpath = get_third_object_rpath(object_td.doTransormRegExp);
-        return object_td.rakeUp(third_object_rpath).should.be.a.eql(third_object_result);
+        return object_td.sortOutVerso(third_object_rpath).should.be.a.eql(third_object_result);
       });
       it('should correct work with cached stringifyed results', function() {
         object_td = new TinyData(second_object);
-        object_td.rakeUp(second_object_rpath).should.be.a.eql(second_object_result);
-        return object_td.rakeUp(second_object_rpath_two).should.be.a.eql(second_object_result_two);
+        object_td.sortOutVerso(second_object_rpath).should.be.a.eql(second_object_result);
+        return object_td.sortOutVerso(second_object_rpath_two).should.be.a.eql(second_object_result_two);
       });
       it('should correct work with finalize function', function() {
         var users_engine;
         users_engine = new TinyData(users);
-        return users_engine.rakeUp(user_like_rake_rule, userRakeFinalize).should.be.a.eql(users_finalize_result);
+        return users_engine.sortOutVerso(user_like_rake_rule, userRakeFinalize).should.be.a.eql(users_finalize_result);
       });
       it('should correct work with data changed rake rule function', function() {
         var user_like_rake_rule2, users_engine;
         users_engine = new TinyData(users);
         user_like_rake_rule2 = get_user_like_rake_rule2(users_engine.doTransormRegExp);
-        return users_engine.rakeUp(user_like_rake_rule2).should.be.a.eql(user_like2_result);
+        return users_engine.sortOutVerso(user_like_rake_rule2).should.be.a.eql(user_like2_result);
       });
       it('should throw error on void call', function() {
         object_td = new TinyData(second_object);
         return (function() {
-          return object_td.rakeUp();
+          return object_td.sortOutVerso();
         }).should.to["throw"](/argument must be/);
       });
       it('should throw error on call with wrong rake rule type', function() {
         object_td = new TinyData(second_object);
         return (function() {
-          return object_td.rakeUp({
+          return object_td.sortOutVerso({
             data: false
           });
         }).should.to["throw"](/argument must be/);
@@ -218,7 +218,7 @@ Its so wrong, but its OK for test
       return it('should throw error on call with wrong finalize type', function() {
         object_td = new TinyData(second_object);
         return (function() {
-          return object_td.rakeUp('test', 'test');
+          return object_td.sortOutVerso('test', 'test');
         }).should.to["throw"](/argument must be Function/);
       });
     });

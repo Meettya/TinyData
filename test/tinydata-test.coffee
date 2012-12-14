@@ -230,46 +230,46 @@ describe 'TinyData:', ->
       object_td = new TinyData first_object
       object_td.should.be.an.instanceof TinyData
 
-  describe '#rakeUp()', ->
+  describe '#sortOutVerso()', ->
 
     it 'should correct work with plain object and string as rake rule', ->
       object_td = new TinyData first_object
-      object_td.rakeUp(first_object_rpath).should.be.a.eql first_object_result
+      object_td.sortOutVerso(first_object_rpath).should.be.a.eql first_object_result
 
     it 'should correct work with deep object and RegExp as rake rule', ->
       object_td = new TinyData second_object
-      object_td.rakeUp(second_object_rpath).should.be.a.eql second_object_result
+      object_td.sortOutVerso(second_object_rpath).should.be.a.eql second_object_result
 
     it 'should correct work with doubled-value object and function as rake rule', ->
       object_td = new TinyData third_object
       third_object_rpath = get_third_object_rpath object_td.doTransormRegExp
-      object_td.rakeUp(third_object_rpath).should.be.a.eql third_object_result
+      object_td.sortOutVerso(third_object_rpath).should.be.a.eql third_object_result
 
     it 'should correct work with cached stringifyed results', ->
       object_td = new TinyData second_object
-      object_td.rakeUp(second_object_rpath).should.be.a.eql second_object_result
-      object_td.rakeUp(second_object_rpath_two).should.be.a.eql second_object_result_two
+      object_td.sortOutVerso(second_object_rpath).should.be.a.eql second_object_result
+      object_td.sortOutVerso(second_object_rpath_two).should.be.a.eql second_object_result_two
 
     it 'should correct work with finalize function', ->
       users_engine = new TinyData users
-      users_engine.rakeUp(user_like_rake_rule, userRakeFinalize).should.be.a.eql users_finalize_result
+      users_engine.sortOutVerso(user_like_rake_rule, userRakeFinalize).should.be.a.eql users_finalize_result
 
     it 'should correct work with data changed rake rule function', ->
       users_engine = new TinyData users
       user_like_rake_rule2 = get_user_like_rake_rule2 users_engine.doTransormRegExp
-      users_engine.rakeUp(user_like_rake_rule2).should.be.a.eql user_like2_result
+      users_engine.sortOutVerso(user_like_rake_rule2).should.be.a.eql user_like2_result
 
     it 'should throw error on void call', ->
       object_td = new TinyData second_object
-      ( -> object_td.rakeUp() ).should.to.throw /argument must be/
+      ( -> object_td.sortOutVerso() ).should.to.throw /argument must be/
 
     it 'should throw error on call with wrong rake rule type', ->
       object_td = new TinyData second_object
-      ( -> object_td.rakeUp( data : false ) ).should.to.throw /argument must be/
+      ( -> object_td.sortOutVerso( data : false ) ).should.to.throw /argument must be/
 
     it 'should throw error on call with wrong finalize type', ->
       object_td = new TinyData second_object
-      ( -> object_td.rakeUp 'test', 'test' ).should.to.throw /argument must be Function/
+      ( -> object_td.sortOutVerso 'test', 'test' ).should.to.throw /argument must be Function/
 
   describe '#rakeStringify()', ->
 

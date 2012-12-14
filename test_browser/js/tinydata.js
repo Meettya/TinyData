@@ -250,7 +250,7 @@ Timing method decorator
         external: '.'
       };
       this._dot_decorator_settings_ = {
-        rakeUp: {
+        rakeAny: {
           convert_income_rake_regexp: true,
           convert_before_finalize_function: true,
           convert_out_result: true
@@ -265,12 +265,12 @@ Timing method decorator
     }
 
     /*
-      This is #rakeUp() job - map through all stringifyed object and do some thing,
+      This is #sortOutVerso() job - map through all stringifyed object and do some thing,
       then may do some finalization code
     */
 
 
-    TinyData.prototype.rakeUp = function(in_rake_rule, finalize_function) {
+    TinyData.prototype.sortOutVerso = function(in_rake_rule, finalize_function) {
       var finalization_name, finalizer, rake_function, rake_rule, rake_rule_type, raked_object, _ref1;
       _ref1 = this._argParser(in_rake_rule, 'rake_rule'), rake_rule_type = _ref1[0], rake_rule = _ref1[1];
       rake_function = this._buildRakeFunction(rake_rule_type, rake_rule);
@@ -343,13 +343,13 @@ Timing method decorator
       var will_be_finalized;
       will_be_finalized = false;
       if ((user_finalize_function != null) && this._argParser(user_finalize_function, 'finalize_function', 'Function')) {
-        if (this._dot_decorator_settings_.rakeUp.convert_before_finalize_function) {
+        if (this._dot_decorator_settings_.rakeAny.convert_before_finalize_function) {
           return 'DECORATE_THEN_FINALAZE';
         } else {
           will_be_finalized = true;
         }
       }
-      if (this._dot_decorator_settings_.rakeUp.convert_out_result) {
+      if (this._dot_decorator_settings_.rakeAny.convert_out_result) {
         if (will_be_finalized) {
           return 'FINALAZE_THEN_DECORATE';
         } else {
@@ -460,7 +460,7 @@ Timing method decorator
       var _this = this;
       switch (rake_rule_type) {
         case 'REGEXP':
-          if (this._dot_decorator_settings_.rakeUp.convert_income_rake_regexp) {
+          if (this._dot_decorator_settings_.rakeAny.convert_income_rake_regexp) {
             rake_rule = this.doTransormRegExp(rake_rule);
           }
           return function(in_array) {

@@ -16,7 +16,7 @@ comments_finalizer = (key, values, emit) ->
   _.each values, (item) -> emit Math.ceil(key), item
 
 object_td = new TinyData blog_data #, debug : yes
-comments_ratings = object_td.rakeUp comments_ratings_rule, comments_finalizer
+comments_ratings = object_td.sortOutVerso comments_ratings_rule, comments_finalizer
 
 console.log "\n Ratings for all comments"
 console.log comments_ratings
@@ -24,7 +24,7 @@ console.log comments_ratings
 # get all comments by posts
 comments_by_post_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
 
-comments_by_post = object_td.rakeUp comments_by_post_rule
+comments_by_post = object_td.sortOutVerso comments_by_post_rule
 
 console.log "\n Comments for every post"
 console.log comments_by_post
@@ -32,7 +32,7 @@ console.log comments_by_post
 # get all posts without comments
 posts_without_comments_rule = /^((\d+)\.comments\.)__EMPTY__\|ARRAY\|/
 #console.log object_td.rakeStringify()
-posts_without_comments = object_td.rakeUp posts_without_comments_rule
+posts_without_comments = object_td.sortOutVerso posts_without_comments_rule
 
 console.log "\n Posts without comments"
 console.log posts_without_comments
@@ -52,7 +52,7 @@ rating_aggregator = (key, values, emit) ->
   null
 
 rating_values_rule = make_rating_values_rule object_td.doTransormRegExp
-posts_with_raitings = object_td.rakeUp rating_values_rule, rating_aggregator
+posts_with_raitings = object_td.sortOutVerso rating_values_rule, rating_aggregator
 
 console.log "\n Posts with rating form comments"
 console.log posts_with_raitings

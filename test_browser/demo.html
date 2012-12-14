@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>TinyData project</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"><style>
+    body { padding-top: 60px; }
+    </style>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css">
+    <!--link(rel='stylesheet', href='/css/style.css')-->
+    <script src="vendor/jquery-1.8.3.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/prettify.css">
+    <script src="vendor/prettify.js"></script>
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="/" class="brand">TinyData</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="index.html">Home</a></li>
+              <li> <a href="test.html">Test suite</a></li>
+              <li><a href="examples.html">Examples</a></li>
+              <li><a href="demo.html">Demo</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- add active toggler to navbar--><script type="text/javascript">
+(function() {
+
+  $(function() {
+    var page_path;
+    page_path = /([^/]+)$/.exec(this.location.pathname);
+    $(".nav li a[href='" + page_path[1] + "']").parents('li').addClass('active');
+    return null;
+  });
+
+}).call(this);
+</script>
+    <!-- only head.js needed at first-->
+    <script src="vendor/head.load-0.99.min.js"></script>
+    <!--head.js loader--><script type="text/javascript">
+(function() {
+
+  head.js("vendor/lodash-1.0.0-rc.1.min.js", {
+    tinydata: "js/tinydata.js"
+  });
+
+}).call(this);
+</script><script type="text/javascript">
+(function() {
+
+  head.ready("tinydata", function() {
+    return $(function() {
+      /*
+          This is second example code
+      */
+
+      var code_example_2, comment_template, get_by_path, post_template, show_blog_example;
+      post_template = _.template("<strong>Title:</strong>  <span><%= post_data.title %></span></br>\n<strong>Author:</strong>  <span><%= post_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= post_data.text %></span></br>\n<span class=\"btn btn-primary btn-small <%= comment_num ? 'active': 'disabled' %>\" data-toggle=\"collapse\" data-target=\"#comments_to_<%= post_idx %>\">Comments (<%= comment_num %>):<span></br>");
+      comment_template = _.template("<div class=\"span5 offset<%= comment_shift %> well\">\n<strong>Author:</strong>  <span><%= comment_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= comment_data.text %></span></br>\n</div>");
+      /*
+          tiny helper, will be included in TinyData
+      */
+
+      get_by_path = function(obj, path) {
+        var steps;
+        steps = path.split('.');
+        return _.reduce(steps, (function(obj, i) {
+          return obj[i];
+        }), obj);
+      };
+      show_blog_example = function(in_data, processed_data) {
+        var main_container;
+        main_container = $('<div>');
+        _.each(in_data, function(post_prop, post_idx) {
+          var comment_container, post, post_object, _ref;
+          post_object = {
+            post_idx: post_idx,
+            post_data: in_data[post_idx],
+            comment_num: (_ref = processed_data[post_idx]) != null ? _ref.length : void 0
+          };
+          _.defaults(post_object, {
+            comment_num: 0
+          });
+          post = $("<div class='span8 well'>").html(post_template(post_object)).appendTo(main_container);
+          comment_container = $("<div class='span10 collapse' id='comments_to_" + post_idx + "'>").appendTo(post);
+          return _.each(processed_data[post_idx], function(comment_path) {
+            var comment, comment_object, comment_shift;
+            comment_shift = (comment_path.split('.').length - 3) / 2;
+            comment_object = {
+              comment_data: get_by_path(in_data, comment_path),
+              comment_shift: comment_shift
+            };
+            return comment = $("<div class='row'>").html(comment_template(comment_object)).appendTo(comment_container);
+          });
+        });
+        return main_container.appendTo($('.blog_examlpe'));
+      };
+      code_example_2 = function(in_data) {
+        var TinyData, object_td, post_with_comments, post_with_comments_rule;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
+        post_with_comments = object_td.sortOutVerso(post_with_comments_rule);
+        show_blog_example(in_data, post_with_comments);
+        return null;
+      };
+      return $.getJSON("example/blog_example_data.json", code_example_2);
+    });
+  });
+
+}).call(this);
+</script>
+    <div class="container">
+      <h1>TinyData Live Demo</h1>
+      <div class="span8"><span class="label label-important">Внимание!</span>
+        <div class="well">
+          <p>Смертельный номер, работа без каната!</p><em>Ну ну дизайнер я, чувство прекрасного меня ненавидит :)</em>
+        </div>
+      </div>
+      <div class="span8">
+        <p>
+          Итого для формирования страницы а-ля блог, 
+          имея на входе только сырые данные а-ля выдача MongoDB,
+          мы использовали
+          <ul class="unstyled">
+            <li>1шт. RegExp (довольно простой и понятный)</li>
+            <li>2шт. _.each нерекурсивной природы</li>
+            <li>2шт. _.template</li>
+            <li>1шт. хелпер, возвращающий объект по dot-нотации</li>
+          </ul> 
+          В сумме 46 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
+          без гольфизма.
+        </p>
+      </div>
+      <div class="blog_examlpe"></div>
+    </div>
+  </body>
+</html>

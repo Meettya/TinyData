@@ -65,7 +65,7 @@ class TinyData
       external : '.'
     # and it needed to polish our dirty hack :)
     @_dot_decorator_settings_ =
-      rakeUp : 
+      rakeAny : 
         convert_income_rake_regexp : yes # take user RegExp (as string or RegExp) 
                                          # and replace dots to @_as_dot_.internal, 
                                          # not applied to function !!!!
@@ -79,17 +79,17 @@ class TinyData
     @_dot_forger_ = new RegExpDotForger @getPathDelimiter('internal'), log : @_do_logging_
 
   ###
-  This is #rakeUp() job - map through all stringifyed object and do some thing,
+  This is #sortOutVerso() job - map through all stringifyed object and do some thing,
   then may do some finalization code
   ###
-  rakeUp : ( in_rake_rule, finalize_function ) ->
+  sortOutVerso : ( in_rake_rule, finalize_function ) ->
     # we are need some prepare stuff
     [rake_rule_type, rake_rule] = @_argParser in_rake_rule, 'rake_rule'
     rake_function = @_buildRakeFunction rake_rule_type, rake_rule
     # Now Cached
     @rakeStringify @_stringification_rule.stringify_filter, @_stringification_rule.stubs_list
     
-    raked_object = @_proceedRake rake_function 
+    raked_object = @_proceedSortingOut rake_function 
 
     if finalization_name = @_getFinalizationName finalize_function
       finalizer = @_prepareFinalization finalization_name, finalize_function
@@ -141,12 +141,12 @@ class TinyData
     will_be_finalized = no
 
     if user_finalize_function? and @_argParser user_finalize_function, 'finalize_function', 'Function'
-      if @_dot_decorator_settings_.rakeUp.convert_before_finalize_function
+      if @_dot_decorator_settings_.rakeAny.convert_before_finalize_function
         return 'DECORATE_THEN_FINALAZE' # YES, its middle-method return, you are really want to talk about it?
       else
         will_be_finalized = yes
 
-    if @_dot_decorator_settings_.rakeUp.convert_out_result
+    if @_dot_decorator_settings_.rakeAny.convert_out_result
       if will_be_finalized
         'FINALAZE_THEN_DECORATE'
       else
@@ -172,17 +172,36 @@ class TinyData
     
   ###
   To separate logic of converting
+  This method trim orchid internal delimiters at the end of keys AND values,
+  than replace all internal dot to external (in values and keys too)
   ###
   _buildResultConvertor : ->
-    dot_pattern = new RegExp @getPathDelimiter('internal'), 'g'
-    dot_symbol = @getPathDelimiter('external')
-    (in_obj) =>
-      for key in _.keys in_obj
-        for item, idx in in_obj[key]
-          in_obj[key][idx] = in_obj[key][idx].replace dot_pattern, dot_symbol
+    dot_symbol = @getPathDelimiter 'external'
+    delimiter_symbol = @getPathDelimiter 'internal'
+    delimiter_pattern = new RegExp delimiter_symbol, 'g'
 
-      in_obj 
-  
+    # if it string - trim orchid delimiter (from right end) than replace it
+    buffing_delimiter = (in_data) =>
+      return in_data unless 'STRING' is @_getItType in_data
+
+      full_string = if delimiter_symbol is in_data.charAt in_data.length - 1
+        in_data.slice 0, -1
+      else
+        in_data
+
+      full_string.replace delimiter_pattern, dot_symbol
+
+
+    (in_obj) =>
+      result_obj = {}
+      for in_key in _.keys in_obj
+        res_key = buffing_delimiter in_key
+        result_obj[res_key] = new Array in_obj[in_key].length # create same size array
+        for in_item, idx in in_obj[in_key]
+          result_obj[res_key][idx] = buffing_delimiter in_item
+      
+      result_obj 
+
   ###
   To separate logic of finalizator
   ###
@@ -202,7 +221,7 @@ class TinyData
   ###
   Internal method for wrap timing 
   ###
-  _proceedRake: ( timeOnDemand 'proceedRake', (rake_function) ->
+  _proceedSortingOut: ( timeOnDemand 'sortingOut', (rake_function) ->
     raked_object = rake_function @_cache_stringifyed_object_
     )
 
@@ -216,14 +235,14 @@ class TinyData
       when 'REGEXP'
 
         # if incoming RegExp needed to be transformed
-        if @_dot_decorator_settings_.rakeUp.convert_income_rake_regexp
+        if @_dot_decorator_settings_.rakeAny.convert_income_rake_regexp
           rake_rule = @doTransormRegExp rake_rule
 
         (in_array) ->
           rake_result = {}
 
           for item in in_array when matched_obj = item.match rake_rule
-            [ key, value ] = [ matched_obj[2], matched_obj[1].slice 0, -1 ]
+            [ key, value ] = [ matched_obj[2], matched_obj[1] ]
             rake_result[key] ?= []
             rake_result[key].push value
             null

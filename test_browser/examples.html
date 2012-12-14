@@ -22,6 +22,7 @@
               <li><a href="index.html">Home</a></li>
               <li> <a href="test.html">Test suite</a></li>
               <li><a href="examples.html">Examples</a></li>
+              <li><a href="demo.html">Demo</a></li>
               <li><a href="#about">About</a></li>
               <li><a href="#contact">Contact</a></li>
             </ul>
@@ -59,61 +60,104 @@
   });
 
   head.ready("tinydata", function() {
-    /*
-      This is first example code
-    */
+    return $(function() {
+      /*
+          This is first example code
+      */
 
-    var code_example_1, code_example_2, show_data_1, show_data_2;
-    show_data_1 = function(in_data, result) {
-      $(".rating_result").children().text(JSON.stringify(result, null, 2));
-      $(".rating_data").children().text(JSON.stringify(in_data, null, 2));
-      prettyPrint();
-      return null;
-    };
-    code_example_1 = function(in_data) {
-      var TinyData, comments_finalizer, comments_ratings, comments_ratings_rule, object_td;
-      TinyData = require('tinydata');
-      object_td = new TinyData(in_data, {
-        debug: true
-      });
-      comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/;
-      comments_finalizer = function(key, values, emit) {
-        _.each(values, function(item) {
-          emit(Math.ceil(key), item);
-          return null;
-        });
+      var code_example_1, code_example_2, code_example_3, show_data_1, show_data_2, show_data_3;
+      show_data_1 = function(in_data, result) {
+        $(".rating_result").children().text(JSON.stringify(result, null, 2));
+        $(".rating_data").children().text(JSON.stringify(in_data, null, 2));
+        prettyPrint();
         return null;
       };
-      comments_ratings = object_td.rakeUp(comments_ratings_rule, comments_finalizer);
-      show_data_1(in_data, comments_ratings);
-      return null;
-    };
-    $(".rating_code").children().text(code_example_1.toString());
-    $.getJSON("example/blog_example_data.json", code_example_1);
-    /*
-      This is second example code
-    */
+      code_example_1 = function(in_data) {
+        var TinyData, comments_finalizer, comments_ratings, comments_ratings_rule, object_td;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/;
+        comments_finalizer = function(key, values, emit) {
+          _.each(values, function(item) {
+            emit(Math.ceil(key), item);
+            return null;
+          });
+          return null;
+        };
+        comments_ratings = object_td.sortOutVerso(comments_ratings_rule, comments_finalizer);
+        show_data_1(in_data, comments_ratings);
+        return null;
+      };
+      $(".rating_code").children().text(code_example_1.toString());
+      $.getJSON("example/blog_example_data.json", code_example_1);
+      /*
+          This is second example code
+      */
 
-    show_data_2 = function(result) {
-      $(".flat_tree_result").children().text(JSON.stringify(result, null, 2));
-      prettyPrint();
-      return null;
-    };
-    code_example_2 = function(in_data) {
-      var TinyData, all_posts, comments_with_post, comments_with_post_rule, comments_without_post, object_td;
-      TinyData = require('tinydata');
-      object_td = new TinyData(in_data, {
-        debug: true
-      });
-      comments_with_post_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
-      comments_with_post = object_td.rakeUp(comments_with_post_rule);
-      comments_without_post = object_td.rakeUp('^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|');
-      all_posts = _.assign(comments_with_post, comments_without_post);
-      show_data_2(all_posts);
-      return null;
-    };
-    $(".flat_tree_code").children().text(code_example_2.toString());
-    return $.getJSON("example/blog_example_data.json", code_example_2);
+      show_data_2 = function(result) {
+        $(".flat_tree_result").children().text(JSON.stringify(result, null, 2));
+        prettyPrint();
+        return null;
+      };
+      code_example_2 = function(in_data) {
+        var TinyData, all_posts, object_td, post_with_comments, post_with_comments_rule, post_without_comments;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
+        post_with_comments = object_td.sortOutVerso(post_with_comments_rule);
+        post_without_comments = object_td.sortOutVerso('^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|');
+        all_posts = _.assign(post_with_comments, post_without_comments);
+        show_data_2(all_posts);
+        return null;
+      };
+      $(".flat_tree_code").children().text(code_example_2.toString());
+      $.getJSON("example/blog_example_data.json", code_example_2);
+      /*
+          This is third code example
+      */
+
+      show_data_3 = function(result) {
+        $(".weight_rating_result").children().text(JSON.stringify(result, null, 2));
+        prettyPrint();
+        return null;
+      };
+      code_example_3 = function(in_data) {
+        var TinyData, make_rating_values_rule, object_td, posts_with_raitings, rating_aggregator, rating_values_rule;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        make_rating_values_rule = function(regexp_transform_fn) {
+          var transformed_regexp;
+          transformed_regexp = regexp_transform_fn(/^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/);
+          return function(stringifyed_item, emit) {
+            var mached_data;
+            if (mached_data = stringifyed_item.match(transformed_regexp)) {
+              emit(mached_data[1], mached_data[2]);
+            }
+            return null;
+          };
+        };
+        rating_aggregator = function(key, values, emit) {
+          var sum_of_all_rating;
+          sum_of_all_rating = _.reduce(values, function(memo, num) {
+            return parseFloat(memo) + parseFloat(num);
+          });
+          emit(key, sum_of_all_rating / values.length);
+          return null;
+        };
+        rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp);
+        posts_with_raitings = object_td.sortOutVerso(rating_values_rule, rating_aggregator);
+        show_data_3(posts_with_raitings);
+        return null;
+      };
+      $(".weight_rating_code").children().text(code_example_3.toString());
+      return $.getJSON("example/blog_example_data.json", code_example_3);
+    });
   });
 
 }).call(this);
@@ -188,7 +232,7 @@
             В данном случае мы округляем рейтинги каждой записи, для удобства,
             фактически работая над ключем, а не значением.
           </p>
-          <pre class="prettyprint">comments_ratings = object_td.rakeUp comments_ratings_rule, comments_finalizer</pre>
+          <pre class="prettyprint">comments_ratings = object_td.sortOutVerso comments_ratings_rule, comments_finalizer</pre>
           <p>
              
             Собственно, это основной метод объекта <strong>TinyData</strong>, который материализует путь (если он отсутствует в кеше),
@@ -225,14 +269,14 @@
           <pre class="prettyprint">TinyData = require 'tinydata'
 object_td = new TinyData in_data, debug : yes</pre>
           <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
-          <pre class="prettyprint">comments_with_post_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/</pre>
+          <pre class="prettyprint">post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/</pre>
           <p><strong>RegExp</strong>-правило для отбора необходимых нам данных.
             В данном случае вторая скобка внутри первой, соответственно результат
             превращается в массив материализованных путей внутри объекта.
           </p>
-          <pre class="prettyprint">comments_with_post = object_td.rakeUp comments_with_post_rule</pre>
+          <pre class="prettyprint">post_with_comments = object_td.sortOutVerso post_with_comments_rule</pre>
           <p>По факту мы выбираем все записи у которых <strong>есть</strong> комментарии.</p>
-          <pre class="prettyprint">comments_without_post = object_td.rakeUp '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'</pre>
+          <pre class="prettyprint">post_without_comments = object_td.sortOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'</pre>
           <p>В данном случае правило представлено строкой, а не объектом регулярного выражения.</p>
           <p>Преобразование <strong>TinyData</strong> сделает сам.</p>
           <p>Само правило выберет все записи, у которых <strong>нет</strong> комментариев.</p><span class="label label-info">Кое-что важное!</span>
@@ -240,11 +284,99 @@ object_td = new TinyData in_data, debug : yes</pre>
             <p>Пустой <strong>объект </strong> при стрингификации исходных данных будет отображаться как <code>__EMPTY__|HASH|</code> (термин <em>объект</em> в JS несколько перегружен, посему он называется hash, как в  <strong>perl</strong> )</p>
             <p>Пустой <strong>массив</strong> будет отображаться как <code>__EMPTY__|ARRAY|</code>.</p>
           </div>
-          <pre class="prettyprint">all_posts = _.assign comments_with_post, comments_without_post</pre>
+          <pre class="prettyprint">all_posts = _.assign post_with_comments, post_without_comments</pre>
           <p>Объединяем все в единый объект, в результате имеем плоское дерево</p>
           <p>
              
             Практический смысл этого примера можно посмотреть в разделе <a href="demo.html">Демо</a>.
+          </p>
+        </div>
+      </div>
+      <div class="span8">
+        <section id="weight_rating">
+          <h4>Рейтинг с весовыми коэффициентами</h4><span class="label label-warning">Disclamer</span>
+          <div class="well">
+            <p>Этот пример нуждается в пояснении интерпретации данных.</p>
+            <p>
+              Положим, что для поста у нас есть ретинг от анонимусов, который суммируется в самом посте
+              и есть оценка поста зарегистрированными пользователями, которые оставили комментарий.
+              Проявим больше доверия второй группе, например 80%, а на первых оставим весовой 
+              коэффициент в общей оценке всего 20%.
+            </p>
+            <p>
+              Для случая, когда есть только оценки анонимусов, они будут иметь 50% веса,
+              а оставшиеся 50% будет составлять виртуальная базовая 3-ка (будем считать, что авторы пишут средне)
+            </p>
+          </div>
+        </section>
+        <div class="span10"> 
+          <p><a href="#rating" data-toggle="collapse" data-target=".rating_data">исходные данные (см. пример выше)...</a></p>
+          <p><a href="#weight_rating" data-toggle="collapse" data-target=".weight_rating_code">листинг кода...</a></p>
+          <div class="weight_rating_code collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+          <p><a href="#weight_rating" data-toggle="collapse" data-target=".weight_rating_result">результат...</a></p>
+          <div class="weight_rating_result collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+        </div>
+        <div class="span9">
+          <h5>Построчный разбор кода в нотации Coffeescript</h5>
+          <pre class="prettyprint">TinyData = require 'tinydata'
+object_td = new TinyData in_data, debug : yes</pre>
+          <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
+          <pre class="prettyprint">make_rating_values_rule = (regexp_transform_fn) -&gt;
+  transformed_regexp = regexp_transform_fn \
+     /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+ 
+  (stringifyed_item, emit) -&gt;
+    if mached_data = stringifyed_item.match transformed_regexp
+      emit mached_data[1], mached_data[2]
+    null</pre>
+          <p>
+            Тут у нас довольно большой блок кода, однако построчное его разбиение
+            бессмысленно, будем описывать целиком.
+          </p><span class="label label-info">Кое-что важное!</span>
+          <div class="well">
+            <p>В качестве третьего варианта правила обработки стрингификации <strong>TinyData </strong> может принимать функцию, в этом случае с каждой строкой можно делать 
+              что угодно.
+            </p>
+            <p>
+              Минусом свободы является то, что нужно погружаться в некоторые детали
+              реализации механизма стрингификации.
+            </p>
+            <p>
+              На самом деле для разделения полей используется не точка, а другой символ
+              и чтобы наше регулярное выражение работало как надо - его следует преобразовать
+              вручную (получив у объекта <strong>TinyData</strong> значение разделителя методом <code>getPathDelimiter 'internal'</code> ), или помощником.
+            </p>
+          </div>
+          <pre class="prettyprint">rating_values_rule = make_rating_values_rule object_td.doTransormRegExp</pre>
+          <p>
+             
+            В данном случае преобразованием занимается помощник, после чего правило в 
+            виде функции приходит к нам обратно. Замыкание здесь используется по соображениям скорости обработки,
+            ведь функция правила просмотра <strong>будет вызываться на каждую строку</strong> материализованного пути. Держите это в уме.
+          </p>
+          <p>
+            Все сложности реализации вышли из того, что нам требуется свернуть 
+            данные по первичному ключу (индексу поста в массиве), т.е. ключем у нас
+            должна быть <strong>первая</strong> скобка, а значением - <strong>вторая</strong>.
+          </p>
+          <pre class="prettyprint">rating_aggregator = (key, values, emit) -&gt; 
+  sum_of_all_rating = _.reduce values, (memo, num) -&gt;
+    parseFloat(memo) + parseFloat num
+  emit key, sum_of_all_rating / values.length
+  null</pre>
+          <p>
+            Кроме того поручим объекту заодно и высчитать среднее арифметическое
+            от наших рейтингов из комментариев.
+          </p>
+          <pre class="prettyprint">posts_with_raitings = object_td.sortOutVerso rating_values_rule, rating_aggregator</pre>
+          <p>Поручаем объекту посчитать все, используя правила обработки и финализации.</p>
+          <p>
+             
+            Дальнейший расчет и обработка данных использованы в разделе <a href="demo.html">Демо</a>.
           </p>
         </div>
       </div>
