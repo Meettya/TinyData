@@ -14,41 +14,19 @@ timeOnDemand = (label, methodBody) ->
     console.timeEnd label if @_do_timing_
     __rval__
 
-###
-Cache mechanism for stringify
-###
-cacheStringify = (methodBody) ->
-  (in_stringify_filter, in_stubs_list)->
-    stringy_filter = @_stringification_rule.stringify_filter
-    stringify_stub_list = @_stringification_rule.stubs_list
-    if not @_cache_stringifyed_object_? or not _.isEqual(in_stringify_filter, stringy_filter) or not _.isEqual in_stubs_list, stringify_stub_list
-      console.log 'stringify cache miss' if @_do_logging_
-      [stringy_filter, stringify_stub_list] = [in_stringify_filter, in_stubs_list]
-      @_cache_stringifyed_object_ = methodBody.call this, in_stringify_filter, in_stubs_list
-    else
-      console.log 'stringify cache hit' if @_do_logging_
-      @_cache_stringifyed_object_
-
 
 # resolve require from [window] or by require() 
 # use _.isPlainObject(x) to speedup type resolution
 _ = @_ ? require 'lodash'
 
 RegExpDotForger = require "./lib/regexp_dot_forger"
-{getItType} = require "./lib/type_detector"
+Stringificator  = require "./lib/stringificator"
+{getItType}     = require "./lib/type_detector"
+{argParser}     = require "./lib/arg_parser"
 
 class TinyData 
 
   constructor: (@_original_obj_={}, @_options_={}) ->
-    # stringification need to be cached
-    @_cache_stringifyed_object_ = null
-    # settings object to validate cache 
-    @_stringification_rule = 
-      stubs_list        : []    # nodes list, witch context will be replaced by __STUB__ 
-      stringify_filter  : null  # rule to add to stringificated object ONLY matched nodes
-      apply_on_depth    : null  # level, where stringify_filter must be applied 
-    # this is our seatbelt for long texts - do not put it into index
-    @_max_text_long_ = 120
 
     # debug turn on some switches
     if @_options_.debug? and @_options_.debug is on
@@ -69,18 +47,17 @@ class TinyData
       external : '.'
     # and it needed to polish our dirty hack :)
     @_dot_decorator_settings_ =
-      rakeAny : 
+      seekAny : 
         convert_income_rake_regexp : yes # take user RegExp (as string or RegExp) 
                                          # and replace dots to @_as_dot_.internal, 
                                          # not applied to function !!!!
         convert_before_finalize_function : yes # finalize_function get already converted data
         convert_out_result      : yes # before data returning 
                                       # (obsolete if convert_before_finalize_function is 'yes' )
-      rakeStringify :
-        convert_stringify_filter : yes  # take user RegExp (as string or RegExp)
-                                        # and replace dots to @_as_dot_.internal
+
     # to transform path delimiter  
     @_dot_forger_ = new RegExpDotForger @getPathDelimiter('internal'), log : @_do_logging_
+    @_stringificator_ = new Stringificator @_original_obj_, @getPathDelimiter('internal'), @doTransormRegExp, log : @_do_logging_
 
   ###
   This method proceed 'seeking' through all stringifyed object and do some thing,
@@ -123,9 +100,9 @@ class TinyData
   may be used to speed up all by reduce stringification work
   ###
   # TODO! parameter validator
-  rakeStringify : ( cacheStringify ( timeOnDemand 'rakeStringify', (in_stringify_filter, in_stubs_list = []) ->
-    @_doStringify in_stringify_filter, in_stubs_list
-    ))
+  rakeStringify : ( timeOnDemand 'rakeStringify', (in_stringify_filter, in_stubs_list = []) ->
+    @_stringificator_.stringifyObject in_stringify_filter, in_stubs_list
+    )
 
   ###
   This method transform incoming RegExp changes \. (dot) to internal dot-substituter 
@@ -160,12 +137,12 @@ class TinyData
   ###
   _seekOutAny : (in_rake_rule, finalize_function, interp_sequence ) ->
     # we are need some prepare stuff
-    [rake_rule_type, rake_rule] = @_argParser in_rake_rule, 'rake_rule'
-    rake_function = @_buildRakeFunction rake_rule_type, rake_rule, interp_sequence
-    # Now Cached
-    @rakeStringify @_stringification_rule.stringify_filter, @_stringification_rule.stubs_list
+    [rake_rule_type, rake_rule] = argParser in_rake_rule, 'rake_rule'
+    seek_function = @_buildSeekFunction rake_rule_type, rake_rule, interp_sequence
+    # for timing call itself
+    stringifyed_object = @rakeStringify()
     
-    raked_object = @_proceedSeekingOut rake_function 
+    raked_object = @_proceedSeekingOut seek_function, stringifyed_object
 
     if finalization_name = @_getFinalizationName finalize_function
       finalizer = @_prepareFinalization finalization_name, finalize_function
@@ -180,13 +157,13 @@ class TinyData
   _getFinalizationName : (user_finalize_function) ->
     will_be_finalized = no
 
-    if user_finalize_function? and @_argParser user_finalize_function, 'finalize_function', 'Function'
-      if @_dot_decorator_settings_.rakeAny.convert_before_finalize_function
+    if user_finalize_function? and argParser user_finalize_function, 'finalize_function', 'Function'
+      if @_dot_decorator_settings_.seekAny.convert_before_finalize_function
         return 'DECORATE_THEN_FINALAZE' # YES, its middle-method return, you are really want to talk about it?
       else
         will_be_finalized = yes
 
-    if @_dot_decorator_settings_.rakeAny.convert_out_result
+    if @_dot_decorator_settings_.seekAny.convert_out_result
       if will_be_finalized
         'FINALAZE_THEN_DECORATE'
       else
@@ -258,8 +235,8 @@ class TinyData
   ###
   Internal method for wrap timing 
   ###
-  _proceedSeekingOut: ( timeOnDemand 'seekingOut', (rake_function) ->
-    raked_object = rake_function @_cache_stringifyed_object_
+  _proceedSeekingOut: ( timeOnDemand 'seekingOut', (seek_function, stringifyed_object) ->
+    seek_function stringifyed_object
     )
 
   ###
@@ -291,11 +268,11 @@ class TinyData
   This method return rake function itself, its different for 
   RegExp or Function
   ###
-  _buildRakeFunction : (rake_rule_type, rake_rule, interp_sequence) ->
+  _buildSeekFunction : (rake_rule_type, rake_rule, interp_sequence) ->
     switch rake_rule_type
       when 'REGEXP'
         # if incoming RegExp needed to be transformed
-        if @_dot_decorator_settings_.rakeAny.convert_income_rake_regexp
+        if @_dot_decorator_settings_.seekAny.convert_income_rake_regexp
           rake_rule = @doTransormRegExp rake_rule
         # if user send RegExp - transform it into function
         @_buildCollectorLayout (item, emit) =>
@@ -308,121 +285,7 @@ class TinyData
       else
         # TODO! Add some more explanation
         throw Error "WTF???!!"
-
-  ###
-  This method parse arg and may ensure its type
-  ###
-  _argParser : (arg, arg_name, strict_type) ->
-    # DRY
-    err_formatter = (err_string, arg_type) ->
-      """
-      #{err_string}
-      |arg_name| = |#{arg_name}|
-      |type| = |#{arg_type}|
-      |arg|   = |#{arg}|
-      """
-
-    parsed_arg = switch arg_type = getItType arg
-      when 'STRING'
-        try
-          ['REGEXP', RegExp arg]
-        catch error
-          throw SyntaxError \
-            err_formatter "cant compile this String to RegExp", arg_type
-      when 'REGEXP'
-        ['REGEXP', arg]
-      when 'FUNCTION'
-        ['FUNCTION', arg]
-      else
-        throw TypeError \
-          err_formatter "argument must be String, RegExp or Function, but got", arg_type
-    
-    if strict_type? and parsed_arg[0] isnt strict_type.toUpperCase()
-      throw TypeError \
-        err_formatter "argument must be #{strict_type}, but got", arg_type
-
-    parsed_arg
   
-  ###
-  This method create limiter for long text
-  ###
-  _makeStringLimiter : (max_length) ->
-    (full_elem_path, elem_content, elem_depth) =>
-      elem_length = elem_content.length
-      unless elem_length > max_length
-        "#{full_elem_path}#{elem_content}"
-      else
-        "#{full_elem_path}__LONG_TEXT__|#{elem_length}|"
-
-  ###
-  This method create stringify filter
-  to reduce part of values to speed up stringification and seeking
-  ###
-  _makeElementFilter : (stringify_rule) ->
-    # name matching rule with or without origins 
-    name_matcher = if stringify_rule?.origin_pattern?
-      stringify_pattern = stringify_rule.origin_pattern
-      # if incoming RegExp needed to be transformed
-      if @_dot_decorator_settings_.rakeStringify.convert_stringify_filter
-        stringify_pattern = @doTransormRegExp stringify_pattern
-
-      (matcher_elem_name, matcher_elem_origin) =>
-        matcher_elem_name is stringify_rule.element_name and stringify_pattern.test matcher_elem_origin
-    else
-      (matcher_elem_name) =>
-        matcher_elem_name is stringify_rule.element_name
-
-    # filter may be applied only in correct depth  
-    (elem_origin, elem_name, elem_depth) =>
-      if stringify_rule.apply_on_depth is elem_depth
-        name_matcher elem_name, elem_origin
-      else 
-        yes
-
-  ###
-  This method stringify object
-  ###
-  _doStringify: (stringify_rule, stubs_list) ->
-    # filter may be applied only in correct depth  
-    filter_body = @_makeElementFilter stringify_rule
-    # this is filter for string elements
-    string_limiter = @_makeStringLimiter @_max_text_long_
-    # its filter itself, assembled and ready to fire
-    is_filter_passed = if stringify_rule? then filter_body else -> yes
-    dot_sign = @getPathDelimiter('internal')
-
-    result_array = []
-    innner_loop = (in_obj, prefix, depth ) =>
-      switch in_obj_type = getItType in_obj
-        when 'HASH'
-          obj_keys = _.keys in_obj
-          if obj_keys.length
-            for key in obj_keys when is_filter_passed prefix, key, depth
-              innner_loop in_obj[key], "#{prefix}#{key}#{dot_sign}", depth + 1
-          else
-            innner_loop "__EMPTY__|HASH|", "#{prefix}", depth
-        when 'ARRAY'
-          if in_obj.length
-            for value, idx in in_obj when is_filter_passed prefix, idx, depth
-              innner_loop value, "#{prefix}#{idx}#{dot_sign}", depth + 1
-          else 
-            innner_loop "__EMPTY__|ARRAY|", "#{prefix}", depth
-        when 'NUMBER', 'BOOLEAN', 'NULL'
-          result_array.push "#{prefix}#{in_obj}"
-        when 'STRING'
-          result_array.push string_limiter prefix, in_obj, depth
-        when 'DATE', 'REGEXP'
-          result_array.push "#{prefix}__#{in_obj_type}__|#{in_obj}|__"
-        else
-          result_array.push "#{prefix}__#{in_obj_type}__"
-      null
-
-    # TODO - check 0 on hashes, is it correct ?
-    innner_loop @_original_obj_, '', 0
-
-    result_array
-
-
 
 module.exports = TinyData
 

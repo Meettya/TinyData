@@ -91,7 +91,8 @@ Its so wrong, but its OK for test
         frends: ['Петя', 'Коля'],
         like: ['пицца', 'BMX', 'рэп'],
         date: new Date(),
-        rounded: true
+        rounded: true,
+        age: 16
       }, {
         name: 'Петя',
         frends: ['Вася', 'Абдулла'],

@@ -165,6 +165,226 @@ Logging method decorator
   module.exports = RegExpDotForger;
 
 }).call(this);
+}, "lib/stringificator": function(exports, require, module) {
+/*
+This is Stringificator for TinyData
+
+Its get object and return materialized path, with some changes, like:
+  * filter some data
+  * cut long text values
+  * change data values to stub (not realized)
+*/
+
+
+(function() {
+  var Stringificator, getItType, _, _ref;
+
+  _ = (_ref = this._) != null ? _ref : require('lodash');
+
+  getItType = require("./type_detector").getItType;
+
+  Stringificator = (function() {
+
+    function Stringificator(_original_obj_, _internal_path_delimiter_, _regexp_transformation_fn_, _options_) {
+      this._original_obj_ = _original_obj_;
+      this._internal_path_delimiter_ = _internal_path_delimiter_;
+      this._regexp_transformation_fn_ = _regexp_transformation_fn_;
+      this._options_ = _options_ != null ? _options_ : {};
+      this._cache_stringifyed_object_ = null;
+      this._stringification_rule = {
+        stubs_list: [],
+        stringify_filter: null
+      };
+      this._max_text_long_ = 120;
+      this._convert_stringify_filter = true;
+      this._do_logging_ = (this._options_.log != null) && this._options_.log === true && ((typeof console !== "undefined" && console !== null ? console.log : void 0) != null) ? true : false;
+    }
+
+    /*
+      This is public method, wrapper for internal and realize a cache
+    */
+
+
+    Stringificator.prototype.stringifyObject = function(in_stringify_filter, in_stubs_list) {
+      var stringify_stub_list, stringy_filter, _ref1;
+      stringy_filter = this._stringification_rule.stringify_filter;
+      stringify_stub_list = this._stringification_rule.stubs_list;
+      in_stringify_filter || (in_stringify_filter = stringy_filter);
+      in_stubs_list || (in_stubs_list = stringify_stub_list);
+      if (!(this._cache_stringifyed_object_ != null) || !_.isEqual(in_stringify_filter, stringy_filter) || !_.isEqual(in_stubs_list, stringify_stub_list)) {
+        if (this._do_logging_) {
+          console.log('stringify cache miss');
+        }
+        _ref1 = [in_stringify_filter, in_stubs_list], stringy_filter = _ref1[0], stringify_stub_list = _ref1[1];
+        return this._cache_stringifyed_object_ = this._doStringification(in_stringify_filter, in_stubs_list);
+      } else {
+        if (this._do_logging_) {
+          console.log('stringify cache hit');
+        }
+        return this._cache_stringifyed_object_;
+      }
+    };
+
+    /*
+      This method stringify object
+    */
+
+
+    Stringificator.prototype._doStringification = function(stringify_rule, stubs_list) {
+      var dot_sign, filter_body, innner_loop, is_filter_passed, result_array, string_limiter,
+        _this = this;
+      filter_body = this._makeElementFilter(stringify_rule);
+      string_limiter = this._makeStringLimiter(this._max_text_long_);
+      is_filter_passed = stringify_rule != null ? filter_body : function() {
+        return true;
+      };
+      dot_sign = this._internal_path_delimiter_;
+      result_array = [];
+      innner_loop = function(in_obj, prefix, depth) {
+        var idx, in_obj_type, key, obj_keys, value, _i, _j, _len, _len1;
+        switch (in_obj_type = getItType(in_obj)) {
+          case 'HASH':
+            obj_keys = _.keys(in_obj);
+            if (obj_keys.length) {
+              for (_i = 0, _len = obj_keys.length; _i < _len; _i++) {
+                key = obj_keys[_i];
+                if (is_filter_passed(prefix, key, depth)) {
+                  innner_loop(in_obj[key], "" + prefix + key + dot_sign, depth + 1);
+                }
+              }
+            } else {
+              innner_loop("__EMPTY__|HASH|", "" + prefix, depth);
+            }
+            break;
+          case 'ARRAY':
+            if (in_obj.length) {
+              for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
+                value = in_obj[idx];
+                if (is_filter_passed(prefix, idx, depth)) {
+                  innner_loop(value, "" + prefix + idx + dot_sign, depth + 1);
+                }
+              }
+            } else {
+              innner_loop("__EMPTY__|ARRAY|", "" + prefix, depth);
+            }
+            break;
+          case 'NUMBER':
+          case 'BOOLEAN':
+          case 'NULL':
+            result_array.push("" + prefix + in_obj);
+            break;
+          case 'STRING':
+            result_array.push(string_limiter(prefix, in_obj, depth));
+            break;
+          case 'DATE':
+          case 'REGEXP':
+            result_array.push("" + prefix + "__" + in_obj_type + "__|" + in_obj + "|__");
+            break;
+          default:
+            result_array.push("" + prefix + "__" + in_obj_type + "__");
+        }
+        return null;
+      };
+      innner_loop(this._original_obj_, '', 0);
+      return result_array;
+    };
+
+    /*
+      This method create limiter for long text
+    */
+
+
+    Stringificator.prototype._makeStringLimiter = function(max_length) {
+      var _this = this;
+      return function(full_elem_path, elem_content, elem_depth) {
+        var elem_length;
+        elem_length = elem_content.length;
+        if (!(elem_length > max_length)) {
+          return "" + full_elem_path + elem_content;
+        } else {
+          return "" + full_elem_path + "__LONG_TEXT__|" + elem_length + "|";
+        }
+      };
+    };
+
+    /*
+      This method create stringify filter
+      to reduce part of values to speed up stringification and seeking
+    */
+
+
+    Stringificator.prototype._makeElementFilter = function(stringify_rule) {
+      var name_matcher, stringify_pattern,
+        _this = this;
+      name_matcher = (stringify_rule != null ? stringify_rule.origin_pattern : void 0) != null ? (stringify_pattern = stringify_rule.origin_pattern, this._convert_stringify_filter ? stringify_pattern = this._regexp_transformation_fn_(stringify_pattern) : void 0, function(matcher_elem_name, matcher_elem_origin) {
+        return matcher_elem_name === stringify_rule.element_name && stringify_pattern.test(matcher_elem_origin);
+      }) : function(matcher_elem_name) {
+        return matcher_elem_name === stringify_rule.element_name;
+      };
+      return function(elem_origin, elem_name, elem_depth) {
+        if (stringify_rule.apply_on_depth === elem_depth) {
+          return name_matcher(elem_name, elem_origin);
+        } else {
+          return true;
+        }
+      };
+    };
+
+    return Stringificator;
+
+  })();
+
+  module.exports = Stringificator;
+
+}).call(this);
+}, "lib/type_detector": function(exports, require, module) {
+/*
+This is type detector for any JS type.
+
+Will be used as simply module with one exported function,
+not a class - its dont needed
+*/
+
+
+(function() {
+  var _, _ref;
+
+  _ = (_ref = this._) != null ? _ref : require('lodash');
+
+  module.exports = {
+    /*
+      This method return type of incoming things
+      HASH mean NOT a function or RegExp or something else  - just simple object
+    */
+
+    getItType: function(x) {
+      if (_.isPlainObject(x)) {
+        return 'HASH';
+      } else if (_.isArray(x)) {
+        return 'ARRAY';
+      } else if (_.isString(x)) {
+        return 'STRING';
+      } else if (_.isNumber(x)) {
+        return 'NUMBER';
+      } else if (_.isBoolean(x)) {
+        return 'BOOLEAN';
+      } else if (_.isNull(x)) {
+        return 'NULL';
+      } else if (_.isFunction(x)) {
+        return 'FUNCTION';
+      } else if (_.isRegExp(x)) {
+        return 'REGEXP';
+      } else if (_.isDate(x)) {
+        return 'DATE';
+      } else if (_.isArguments(x)) {
+        return 'ARGUMENTS';
+      } else {
+        return 'OTHER';
+      }
+    }
+  };
+
+}).call(this);
 }, "tinydata": function(exports, require, module) {
 /*
 This is tiny data-mining engine
@@ -179,7 +399,7 @@ Timing method decorator
 
 
 (function() {
-  var RegExpDotForger, TinyData, cacheStringify, timeOnDemand, _, _ref,
+  var RegExpDotForger, Stringificator, TinyData, getItType, timeOnDemand, _, _ref,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   timeOnDemand = function(label, methodBody) {
@@ -196,34 +416,13 @@ Timing method decorator
     };
   };
 
-  /*
-  Cache mechanism for stringify
-  */
-
-
-  cacheStringify = function(methodBody) {
-    return function(in_stringify_filter, in_stubs_list) {
-      var stringify_stub_list, stringy_filter, _ref;
-      stringy_filter = this._stringification_rule.stringify_filter;
-      stringify_stub_list = this._stringification_rule.stubs_list;
-      if (!(this._cache_stringifyed_object_ != null) || !_.isEqual(in_stringify_filter, stringy_filter) || !_.isEqual(in_stubs_list, stringify_stub_list)) {
-        if (this._do_logging_) {
-          console.log('stringify cache miss');
-        }
-        _ref = [in_stringify_filter, in_stubs_list], stringy_filter = _ref[0], stringify_stub_list = _ref[1];
-        return this._cache_stringifyed_object_ = methodBody.call(this, in_stringify_filter, in_stubs_list);
-      } else {
-        if (this._do_logging_) {
-          console.log('stringify cache hit');
-        }
-        return this._cache_stringifyed_object_;
-      }
-    };
-  };
-
   _ = (_ref = this._) != null ? _ref : require('lodash');
 
   RegExpDotForger = require("./lib/regexp_dot_forger");
+
+  Stringificator = require("./lib/stringificator");
+
+  getItType = require("./lib/type_detector").getItType;
 
   TinyData = (function() {
 
@@ -234,13 +433,6 @@ Timing method decorator
 
       this.doTransormRegExp = __bind(this.doTransormRegExp, this);
 
-      this._cache_stringifyed_object_ = null;
-      this._stringification_rule = {
-        stubs_list: [],
-        stringify_filter: null,
-        apply_on_depth: null
-      };
-      this._max_text_long_ = 120;
       if ((this._options_.debug != null) && this._options_.debug === true) {
         this._options_.timing = true;
         this._options_.logging = true;
@@ -258,12 +450,12 @@ Timing method decorator
           convert_income_rake_regexp: true,
           convert_before_finalize_function: true,
           convert_out_result: true
-        },
-        rakeStringify: {
-          convert_stringify_filter: true
         }
       };
       this._dot_forger_ = new RegExpDotForger(this.getPathDelimiter('internal'), {
+        log: this._do_logging_
+      });
+      this._stringificator_ = new Stringificator(this._original_obj_, this.getPathDelimiter('internal'), this.doTransormRegExp, {
         log: this._do_logging_
       });
     }
@@ -322,12 +514,12 @@ Timing method decorator
     */
 
 
-    TinyData.prototype.rakeStringify = cacheStringify(timeOnDemand('rakeStringify', function(in_stringify_filter, in_stubs_list) {
+    TinyData.prototype.rakeStringify = timeOnDemand('rakeStringify', function(in_stringify_filter, in_stubs_list) {
       if (in_stubs_list == null) {
         in_stubs_list = [];
       }
-      return this._doStringify(in_stringify_filter, in_stubs_list);
-    }));
+      return this._stringificator_.stringifyObject(in_stringify_filter, in_stubs_list);
+    });
 
     /*
       This method transform incoming RegExp changes \. (dot) to internal dot-substituter
@@ -372,11 +564,11 @@ Timing method decorator
 
 
     TinyData.prototype._seekOutAny = function(in_rake_rule, finalize_function, interp_sequence) {
-      var finalization_name, finalizer, rake_function, rake_rule, rake_rule_type, raked_object, _ref1;
+      var finalization_name, finalizer, rake_function, rake_rule, rake_rule_type, raked_object, stringifyed_object, _ref1;
       _ref1 = this._argParser(in_rake_rule, 'rake_rule'), rake_rule_type = _ref1[0], rake_rule = _ref1[1];
       rake_function = this._buildRakeFunction(rake_rule_type, rake_rule, interp_sequence);
-      this.rakeStringify(this._stringification_rule.stringify_filter, this._stringification_rule.stubs_list);
-      raked_object = this._proceedSeekingOut(rake_function);
+      stringifyed_object = this.rakeStringify();
+      raked_object = this._proceedSeekingOut(rake_function, stringifyed_object);
       if (finalization_name = this._getFinalizationName(finalize_function)) {
         finalizer = this._prepareFinalization(finalization_name, finalize_function);
         return finalizer(raked_object);
@@ -451,7 +643,7 @@ Timing method decorator
       delimiter_pattern = new RegExp(delimiter_symbol, 'g');
       return function(in_data) {
         var full_string;
-        if ('STRING' !== _this._getItType(in_data)) {
+        if ('STRING' !== getItType(in_data)) {
           return in_data;
         }
         full_string = delimiter_symbol === in_data.charAt(in_data.length - 1) ? in_data.slice(0, -1) : in_data;
@@ -503,9 +695,9 @@ Timing method decorator
     */
 
 
-    TinyData.prototype._proceedSeekingOut = timeOnDemand('seekingOut', function(rake_function) {
+    TinyData.prototype._proceedSeekingOut = timeOnDemand('seekingOut', function(rake_function, stringifyed_object) {
       var raked_object;
-      return raked_object = rake_function(this._cache_stringifyed_object_);
+      return raked_object = rake_function(stringifyed_object);
     });
 
     /*
@@ -538,7 +730,7 @@ Timing method decorator
         var arg_type, emit, item, key, rake_result, _i, _j, _len, _len1, _ref1;
         rake_result = {};
         emit = _this._buildEmitCollector(rake_result);
-        switch (arg_type = _this._getItType(in_obj)) {
+        switch (arg_type = getItType(in_obj)) {
           case 'ARRAY':
             for (_i = 0, _len = in_obj.length; _i < _len; _i++) {
               item = in_obj[_i];
@@ -597,7 +789,7 @@ Timing method decorator
         return "" + err_string + "\n|arg_name| = |" + arg_name + "|\n|type| = |" + arg_type + "|\n|arg|   = |" + arg + "|";
       };
       parsed_arg = (function() {
-        switch (arg_type = this._getItType(arg)) {
+        switch (arg_type = getItType(arg)) {
           case 'STRING':
             try {
               return ['REGEXP', RegExp(arg)];
@@ -612,142 +804,11 @@ Timing method decorator
           default:
             throw TypeError(err_formatter("argument must be String, RegExp or Function, but got", arg_type));
         }
-      }).call(this);
+      })();
       if ((strict_type != null) && parsed_arg[0] !== strict_type.toUpperCase()) {
         throw TypeError(err_formatter("argument must be " + strict_type + ", but got", arg_type));
       }
       return parsed_arg;
-    };
-
-    /*
-      This method create limiter for long text
-    */
-
-
-    TinyData.prototype._makeStringLimiter = function(max_length) {
-      var _this = this;
-      return function(full_elem_path, elem_content, elem_depth) {
-        var elem_length;
-        elem_length = elem_content.length;
-        if (!(elem_length > max_length)) {
-          return "" + full_elem_path + elem_content;
-        } else {
-          return "" + full_elem_path + "__LONG_TEXT__|" + elem_length + "|";
-        }
-      };
-    };
-
-    /*
-      This method create stringify filter
-      to reduce part of values to speed up stringification and seeking
-    */
-
-
-    TinyData.prototype._makeElementFilter = function(stringify_rule) {
-      var name_matcher, stringify_pattern,
-        _this = this;
-      name_matcher = (stringify_rule != null ? stringify_rule.origin_pattern : void 0) != null ? (stringify_pattern = stringify_rule.origin_pattern, this._dot_decorator_settings_.rakeStringify.convert_stringify_filter ? stringify_pattern = this.doTransormRegExp(stringify_pattern) : void 0, function(matcher_elem_name, matcher_elem_origin) {
-        return matcher_elem_name === stringify_rule.element_name && stringify_pattern.test(matcher_elem_origin);
-      }) : function(matcher_elem_name) {
-        return matcher_elem_name === stringify_rule.element_name;
-      };
-      return function(elem_origin, elem_name, elem_depth) {
-        if (stringify_rule.apply_on_depth === elem_depth) {
-          return name_matcher(elem_name, elem_origin);
-        } else {
-          return true;
-        }
-      };
-    };
-
-    /*
-      This method stringify object
-    */
-
-
-    TinyData.prototype._doStringify = function(stringify_rule, stubs_list) {
-      var dot_sign, filter_body, innner_loop, is_filter_passed, result_array, string_limiter,
-        _this = this;
-      filter_body = this._makeElementFilter(stringify_rule);
-      string_limiter = this._makeStringLimiter(this._max_text_long_);
-      is_filter_passed = stringify_rule != null ? filter_body : function() {
-        return true;
-      };
-      dot_sign = this.getPathDelimiter('internal');
-      result_array = [];
-      innner_loop = function(in_obj, prefix, depth) {
-        var idx, in_obj_type, key, obj_keys, value, _i, _j, _len, _len1;
-        switch (in_obj_type = _this._getItType(in_obj)) {
-          case 'HASH':
-            obj_keys = _.keys(in_obj);
-            if (obj_keys.length) {
-              for (_i = 0, _len = obj_keys.length; _i < _len; _i++) {
-                key = obj_keys[_i];
-                if (is_filter_passed(prefix, key, depth)) {
-                  innner_loop(in_obj[key], "" + prefix + key + dot_sign, depth + 1);
-                }
-              }
-            } else {
-              innner_loop("__EMPTY__|HASH|", "" + prefix, depth);
-            }
-            break;
-          case 'ARRAY':
-            if (in_obj.length) {
-              for (idx = _j = 0, _len1 = in_obj.length; _j < _len1; idx = ++_j) {
-                value = in_obj[idx];
-                if (is_filter_passed(prefix, idx, depth)) {
-                  innner_loop(value, "" + prefix + idx + dot_sign, depth + 1);
-                }
-              }
-            } else {
-              innner_loop("__EMPTY__|ARRAY|", "" + prefix, depth);
-            }
-            break;
-          case 'PLAIN':
-            result_array.push("" + prefix + in_obj);
-            break;
-          case 'STRING':
-            result_array.push(string_limiter(prefix, in_obj, depth));
-            break;
-          case 'DATE':
-          case 'REGEXP':
-            result_array.push("" + prefix + "__" + in_obj_type + "__|" + in_obj + "|__");
-            break;
-          default:
-            result_array.push("" + prefix + "__" + in_obj_type + "__");
-        }
-        return null;
-      };
-      innner_loop(this._original_obj_, '', 0);
-      return result_array;
-    };
-
-    /*
-      This method return type of incoming things
-      HASH mean NOT a function or RegExp or something else  - just simple object
-    */
-
-
-    TinyData.prototype._getItType = function(x) {
-      if (_.isPlainObject(x)) {
-        return 'HASH';
-      } else if (_.isArray(x)) {
-        return 'ARRAY';
-      } else if (_.isString(x)) {
-        return 'STRING';
-      } else if (_.isNumber(x) || _.isBoolean(x) || _.isNull(x)) {
-        return 'PLAIN';
-      } else if (_.isFunction(x)) {
-        return 'FUNCTION';
-      } else if (_.isRegExp(x)) {
-        return 'REGEXP';
-      } else if (_.isDate(x)) {
-        return 'DATE';
-      } else if (_.isArguments(x)) {
-        return 'ARGUMENTS';
-      } else {
-        return 'OTHER';
-      }
     };
 
     return TinyData;
