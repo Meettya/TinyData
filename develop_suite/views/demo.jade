@@ -78,7 +78,7 @@ block content
           TinyData = require 'tinydata'
           object_td = new TinyData in_data, debug : yes
           post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
-          post_with_comments = object_td.sortOutVerso post_with_comments_rule
+          post_with_comments = object_td.seekOutVerso post_with_comments_rule
           show_blog_example in_data, post_with_comments
           null
 

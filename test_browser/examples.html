@@ -86,7 +86,7 @@
           });
           return null;
         };
-        comments_ratings = object_td.sortOutVerso(comments_ratings_rule, comments_finalizer);
+        comments_ratings = object_td.seekOutVerso(comments_ratings_rule, comments_finalizer);
         show_data_1(in_data, comments_ratings);
         return null;
       };
@@ -108,8 +108,8 @@
           debug: true
         });
         post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
-        post_with_comments = object_td.sortOutVerso(post_with_comments_rule);
-        post_without_comments = object_td.sortOutVerso('^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|');
+        post_with_comments = object_td.seekOutVerso(post_with_comments_rule);
+        post_without_comments = object_td.seekOutVerso('^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|');
         all_posts = _.assign(post_with_comments, post_without_comments);
         show_data_2(all_posts);
         return null;
@@ -151,7 +151,7 @@
           return null;
         };
         rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp);
-        posts_with_raitings = object_td.sortOutVerso(rating_values_rule, rating_aggregator);
+        posts_with_raitings = object_td.seekOutVerso(rating_values_rule, rating_aggregator);
         show_data_3(posts_with_raitings);
         return null;
       };
@@ -232,7 +232,7 @@
             В данном случае мы округляем рейтинги каждой записи, для удобства,
             фактически работая над ключем, а не значением.
           </p>
-          <pre class="prettyprint">comments_ratings = object_td.sortOutVerso comments_ratings_rule, comments_finalizer</pre>
+          <pre class="prettyprint">comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer</pre>
           <p>
              
             Собственно, это основной метод объекта <strong>TinyData</strong>, который материализует путь (если он отсутствует в кеше),
@@ -274,9 +274,9 @@ object_td = new TinyData in_data, debug : yes</pre>
             В данном случае вторая скобка внутри первой, соответственно результат
             превращается в массив материализованных путей внутри объекта.
           </p>
-          <pre class="prettyprint">post_with_comments = object_td.sortOutVerso post_with_comments_rule</pre>
+          <pre class="prettyprint">post_with_comments = object_td.seekOutVerso post_with_comments_rule</pre>
           <p>По факту мы выбираем все записи у которых <strong>есть</strong> комментарии.</p>
-          <pre class="prettyprint">post_without_comments = object_td.sortOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'</pre>
+          <pre class="prettyprint">post_without_comments = object_td.seekOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'</pre>
           <p>В данном случае правило представлено строкой, а не объектом регулярного выражения.</p>
           <p>Преобразование <strong>TinyData</strong> сделает сам.</p>
           <p>Само правило выберет все записи, у которых <strong>нет</strong> комментариев.</p><span class="label label-info">Кое-что важное!</span>
@@ -372,7 +372,7 @@ object_td = new TinyData in_data, debug : yes</pre>
             Кроме того поручим объекту заодно и высчитать среднее арифметическое
             от наших рейтингов из комментариев.
           </p>
-          <pre class="prettyprint">posts_with_raitings = object_td.sortOutVerso rating_values_rule, rating_aggregator</pre>
+          <pre class="prettyprint">posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator</pre>
           <p>Поручаем объекту посчитать все, используя правила обработки и финализации.</p>
           <p>
              

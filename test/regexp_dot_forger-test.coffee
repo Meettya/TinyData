@@ -9,7 +9,7 @@ _ = @_ ? require 'lodash'
 
 lib_path = GLOBAL?.lib_path || ''
 
-RegExpDotForger = require "#{lib_path}regexp_dot_forger"
+RegExpDotForger = require "#{lib_path}lib/regexp_dot_forger"
 
 forger_obj = character_set_pattern = escaped_dot_pattern = null
 

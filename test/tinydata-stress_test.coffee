@@ -91,7 +91,7 @@ describe 'TinyData: stress test', ->
       _.size(huge_array).should.be.a.equal 81920
       _.size(huge_result['soul']).should.be.a.equal 32768
 
-  describe '#sortOutVerso() without optimization', ->
+  describe '#seekOutVerso() without optimization', ->
 
     beforeEach ->
       huge_array = _.union [], users
@@ -101,7 +101,7 @@ describe 'TinyData: stress test', ->
       _(12).times -> huge_array = huge_array.concat huge_array
 
       object_td = new TinyData huge_array, timing : yes
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 20480
       _.size(huge_result['soul']).should.be.a.equal 8192
@@ -112,7 +112,7 @@ describe 'TinyData: stress test', ->
       _(13).times -> huge_array = huge_array.concat huge_array
 
       object_td = new TinyData huge_array, timing : yes
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 40960
       _.size(huge_result['soul']).should.be.a.equal 16384
@@ -123,12 +123,12 @@ describe 'TinyData: stress test', ->
       _(14).times -> huge_array = huge_array.concat huge_array
 
       object_td = new TinyData huge_array, timing : yes
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 81920
       _.size(huge_result['soul']).should.be.a.equal 32768
       
-  describe '#sortOutVerso() with rakeStringify pre-filter (with strict settings)', ->
+  describe '#seekOutVerso() with rakeStringify pre-filter (with strict settings)', ->
 
     beforeEach ->
       huge_array = _.union [], users
@@ -144,7 +144,7 @@ describe 'TinyData: stress test', ->
 
       object_td = new TinyData huge_array, timing : yes
       object_td.rakeStringify stringify_filter
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 20480
       _.size(huge_result['soul']).should.be.a.equal 8192
@@ -156,7 +156,7 @@ describe 'TinyData: stress test', ->
 
       object_td = new TinyData huge_array, timing : yes
       object_td.rakeStringify stringify_filter
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 40960
       _.size(huge_result['soul']).should.be.a.equal 16384
@@ -168,12 +168,12 @@ describe 'TinyData: stress test', ->
 
       object_td = new TinyData huge_array, timing : yes
       object_td.rakeStringify stringify_filter
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 81920
       _.size(huge_result['soul']).should.be.a.equal 32768
 
-  describe '#sortOutVerso() with rakeStringify pre-filter (with moderate settings)', ->
+  describe '#seekOutVerso() with rakeStringify pre-filter (with moderate settings)', ->
 
     beforeEach ->
       huge_array = _.union [], users
@@ -188,7 +188,7 @@ describe 'TinyData: stress test', ->
 
       object_td = new TinyData huge_array, timing : yes
       object_td.rakeStringify stringify_filter
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 20480
       _.size(huge_result['soul']).should.be.a.equal 8192
@@ -199,7 +199,7 @@ describe 'TinyData: stress test', ->
 
       object_td = new TinyData huge_array, timing : yes
       object_td.rakeStringify stringify_filter
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 40960
       _.size(huge_result['soul']).should.be.a.equal 16384
@@ -211,7 +211,7 @@ describe 'TinyData: stress test', ->
 
       object_td = new TinyData huge_array, timing : yes
       object_td.rakeStringify stringify_filter
-      huge_result = object_td.sortOutVerso user_like_rpath
+      huge_result = object_td.seekOutVerso user_like_rpath
 
       _.size(huge_array).should.be.a.equal 81920
       _.size(huge_result['soul']).should.be.a.equal 32768

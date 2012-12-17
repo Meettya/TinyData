@@ -36,7 +36,7 @@ Now tasks
 ###
 
 task 'pre_commit', 'build all before commit', pre_commit = (cb) ->
-  async.series [ test_coffee, build_lib_node, prepare_all_for_browser ], (err) ->
+  async.series [ test_coffee, build_lib_node, build_lib_node_dependency, prepare_all_for_browser ], (err) ->
       console.log "#{err}".error if err?
       console.log ' Pre-commit: all done!'.out
 
@@ -44,7 +44,7 @@ task 'test_coffee', 'test module for node.js', test_coffee = (cb) ->
   commands.test_coffee cb, paths.test_dir
 
 task 'compile_for_node', 'compile module for use in node', compile_for_node = (cb) ->
-  async.series [ test_coffee, build_lib_node ], (err) ->
+  async.series [ test_coffee, build_lib_node, build_lib_node_dependency ], (err) ->
     console.log "#{err}".error if err?
     console.log ' Node.js: all done!'.out
 
@@ -77,6 +77,13 @@ EX-task below, now just function
 #task 'build_lib_node', 'build module from source for node.js', 
 build_lib_node = (cb) ->
   commands.build_coffee cb, paths.src_dir, paths.lib_dir, /\.coffee$/
+
+# this for TinyData dependency
+build_lib_node_dependency = (cb) ->
+  dependency_dir = path.join paths.src_dir, 'lib'
+  dependency_lib_dir = path.join paths.lib_dir, 'lib'
+  commands.build_coffee cb, dependency_dir, dependency_lib_dir, /\.coffee$/
+
 
 #task 'build_lib_browser', 'build stitched module for browser', 
 build_lib_browser = (cb) ->

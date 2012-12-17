@@ -48,7 +48,7 @@
     };
   }
   return this.require.define;
-}).call(this)({"regexp_dot_forger": function(exports, require, module) {
+}).call(this)({"lib/regexp_dot_forger": function(exports, require, module) {
 /*
 This is RegExp helper for TinyData
 
@@ -223,13 +223,15 @@ Timing method decorator
 
   _ = (_ref = this._) != null ? _ref : require('lodash');
 
-  RegExpDotForger = require("./regexp_dot_forger");
+  RegExpDotForger = require("./lib/regexp_dot_forger");
 
   TinyData = (function() {
 
     function TinyData(_original_obj_, _options_) {
       this._original_obj_ = _original_obj_ != null ? _original_obj_ : {};
       this._options_ = _options_ != null ? _options_ : {};
+      this._buildCollectorLayout = __bind(this._buildCollectorLayout, this);
+
       this.doTransormRegExp = __bind(this.doTransormRegExp, this);
 
       this._cache_stringifyed_object_ = null;
@@ -242,9 +244,11 @@ Timing method decorator
       if ((this._options_.debug != null) && this._options_.debug === true) {
         this._options_.timing = true;
         this._options_.logging = true;
+        this._do_warning_ = true;
       }
       this._do_timing_ = (this._options_.timing != null) && this._options_.timing === true && ((typeof console !== "undefined" && console !== null ? console.time : void 0) != null) ? true : false;
       this._do_logging_ = (this._options_.logging != null) && this._options_.logging === true && ((typeof console !== "undefined" && console !== null ? console.log : void 0) != null) ? true : false;
+      this._do_warning_ = (this._options_.warning != null) && this._options_.warning === true && ((typeof console !== "undefined" && console !== null ? console.warn : void 0) != null) ? true : false;
       this._dot_ = {
         internal: "\uFE45",
         external: '.'
@@ -265,23 +269,51 @@ Timing method decorator
     }
 
     /*
-      This is #sortOutVerso() job - map through all stringifyed object and do some thing,
+      This method proceed 'seeking' through all stringifyed object and do some thing,
       then may do some finalization code
+      Builded for common case of usage, 
+      when rule is RegExp and we are want to map matched result in direct order:
+      first capture -> key
+      second capture -> value
     */
 
 
-    TinyData.prototype.sortOutVerso = function(in_rake_rule, finalize_function) {
-      var finalization_name, finalizer, rake_function, rake_rule, rake_rule_type, raked_object, _ref1;
-      _ref1 = this._argParser(in_rake_rule, 'rake_rule'), rake_rule_type = _ref1[0], rake_rule = _ref1[1];
-      rake_function = this._buildRakeFunction(rake_rule_type, rake_rule);
-      this.rakeStringify(this._stringification_rule.stringify_filter, this._stringification_rule.stubs_list);
-      raked_object = this._proceedRake(rake_function);
-      if (finalization_name = this._getFinalizationName(finalize_function)) {
-        finalizer = this._prepareFinalization(finalization_name, finalize_function);
-        return finalizer(raked_object);
-      } else {
-        return raked_object;
+    TinyData.prototype.seekOut = function(in_rake_rule, finalize_function, interp_sequence) {
+      if (interp_sequence == null) {
+        interp_sequence = {};
       }
+      _.defaults(interp_sequence, {
+        key: 1,
+        value: 2
+      });
+      if (this._do_warning_ && interp_sequence.key >= interp_sequence.value) {
+        console.warn("for reverse interpretation direction it would be better to use #seekOutVerso()\n|key_order|   = |" + interp_sequence.key + "|\n|value_order| = |" + interp_sequence.value + "|");
+      }
+      return this._seekOutAny(in_rake_rule, finalize_function, interp_sequence);
+    };
+
+    /*
+      This method proceed 'seeking' through all stringifyed object and do some thing,
+      then may do some finalization code
+      Builded for common case of usage, 
+      when rule is RegExp and we are want to map matched result in reverse order:
+      first capture -> value
+      second capture -> key
+    */
+
+
+    TinyData.prototype.seekOutVerso = function(in_rake_rule, finalize_function, interp_sequence) {
+      if (interp_sequence == null) {
+        interp_sequence = {};
+      }
+      _.defaults(interp_sequence, {
+        key: 2,
+        value: 1
+      });
+      if (this._do_warning_ && interp_sequence.value >= interp_sequence.key) {
+        console.warn("for direct interpretation direction it would be better to use #seekOut()\n|key_order|   = |" + interp_sequence.key + "|\n|value_order| = |" + interp_sequence.value + "|");
+      }
+      return this._seekOutAny(in_rake_rule, finalize_function, interp_sequence);
     };
 
     /*
@@ -333,6 +365,25 @@ Timing method decorator
       Just few public methods :)
     */
 
+
+    /*
+      This is realy seek processor code, one for any directions
+    */
+
+
+    TinyData.prototype._seekOutAny = function(in_rake_rule, finalize_function, interp_sequence) {
+      var finalization_name, finalizer, rake_function, rake_rule, rake_rule_type, raked_object, _ref1;
+      _ref1 = this._argParser(in_rake_rule, 'rake_rule'), rake_rule_type = _ref1[0], rake_rule = _ref1[1];
+      rake_function = this._buildRakeFunction(rake_rule_type, rake_rule, interp_sequence);
+      this.rakeStringify(this._stringification_rule.stringify_filter, this._stringification_rule.stubs_list);
+      raked_object = this._proceedSeekingOut(rake_function);
+      if (finalization_name = this._getFinalizationName(finalize_function)) {
+        finalizer = this._prepareFinalization(finalization_name, finalize_function);
+        return finalizer(raked_object);
+      } else {
+        return raked_object;
+      }
+    };
 
     /*
       Try to reduce logic level
@@ -388,56 +439,63 @@ Timing method decorator
     };
 
     /*
+      This method create function to wipe 'orchid' delimiter
+    */
+
+
+    TinyData.prototype._makeBuffingDelimiterWeel = function() {
+      var delimiter_pattern, delimiter_symbol, dot_symbol,
+        _this = this;
+      dot_symbol = this.getPathDelimiter('external');
+      delimiter_symbol = this.getPathDelimiter('internal');
+      delimiter_pattern = new RegExp(delimiter_symbol, 'g');
+      return function(in_data) {
+        var full_string;
+        if ('STRING' !== _this._getItType(in_data)) {
+          return in_data;
+        }
+        full_string = delimiter_symbol === in_data.charAt(in_data.length - 1) ? in_data.slice(0, -1) : in_data;
+        return full_string.replace(delimiter_pattern, dot_symbol);
+      };
+    };
+
+    /*
       To separate logic of converting
+      This method trim orchid internal delimiters at the end of keys AND values,
+      than replace all internal dot to external (in values and keys too)
     */
 
 
     TinyData.prototype._buildResultConvertor = function() {
-      var dot_pattern, dot_symbol,
+      var buffing_delimiter,
         _this = this;
-      dot_pattern = new RegExp(this.getPathDelimiter('internal'), 'g');
-      dot_symbol = this.getPathDelimiter('external');
+      buffing_delimiter = this._makeBuffingDelimiterWeel();
       return function(in_obj) {
-        var idx, item, key, _i, _j, _len, _len1, _ref1, _ref2;
+        var idx, in_item, in_key, res_key, result_obj, _i, _j, _len, _len1, _ref1, _ref2;
+        result_obj = {};
         _ref1 = _.keys(in_obj);
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          key = _ref1[_i];
-          _ref2 = in_obj[key];
+          in_key = _ref1[_i];
+          res_key = buffing_delimiter(in_key);
+          result_obj[res_key] = new Array(in_obj[in_key].length);
+          _ref2 = in_obj[in_key];
           for (idx = _j = 0, _len1 = _ref2.length; _j < _len1; idx = ++_j) {
-            item = _ref2[idx];
-            in_obj[key][idx] = in_obj[key][idx].replace(dot_pattern, dot_symbol);
+            in_item = _ref2[idx];
+            result_obj[res_key][idx] = buffing_delimiter(in_item);
           }
         }
-        return in_obj;
+        return result_obj;
       };
     };
 
     /*
       To separate logic of finalizator
+      actually just wrapper
     */
 
 
     TinyData.prototype._buildUserFinalizer = function(user_fn) {
-      var _this = this;
-      return function(in_obj) {
-        var emit, finalized_rake_result, key, _i, _len, _ref1;
-        finalized_rake_result = {};
-        emit = function(key, value) {
-          var _ref1;
-          if ((key != null) && (value != null)) {
-            if ((_ref1 = finalized_rake_result[key]) == null) {
-              finalized_rake_result[key] = [];
-            }
-            return finalized_rake_result[key].push(value);
-          }
-        };
-        _ref1 = _.keys(in_obj);
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          key = _ref1[_i];
-          user_fn.call(_this, key, in_obj[key], emit);
-        }
-        return finalized_rake_result;
-      };
+      return this._buildCollectorLayout(user_fn);
     };
 
     /*
@@ -445,10 +503,61 @@ Timing method decorator
     */
 
 
-    TinyData.prototype._proceedRake = timeOnDemand('proceedRake', function(rake_function) {
+    TinyData.prototype._proceedSeekingOut = timeOnDemand('seekingOut', function(rake_function) {
       var raked_object;
       return raked_object = rake_function(this._cache_stringifyed_object_);
     });
+
+    /*
+      This method create 'emit' function for data collection
+    */
+
+
+    TinyData.prototype._buildEmitCollector = function(result_obj) {
+      var _this = this;
+      return function(key, value) {
+        var _ref1;
+        if ((key != null) && (value != null)) {
+          if ((_ref1 = result_obj[key]) == null) {
+            result_obj[key] = [];
+          }
+          result_obj[key].push(value);
+          return null;
+        }
+      };
+    };
+
+    /*
+      This method create collector layout for any worker
+    */
+
+
+    TinyData.prototype._buildCollectorLayout = function(work_fn) {
+      var _this = this;
+      return function(in_obj) {
+        var arg_type, emit, item, key, rake_result, _i, _j, _len, _len1, _ref1;
+        rake_result = {};
+        emit = _this._buildEmitCollector(rake_result);
+        switch (arg_type = _this._getItType(in_obj)) {
+          case 'ARRAY':
+            for (_i = 0, _len = in_obj.length; _i < _len; _i++) {
+              item = in_obj[_i];
+              work_fn.call(_this, item, emit);
+            }
+            break;
+          case 'HASH':
+            _ref1 = _.keys(in_obj);
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              key = _ref1[_j];
+              work_fn.call(_this, key, in_obj[key], emit);
+            }
+            break;
+          default:
+            throw Error("cant work with object type |" + arg_type + "|");
+        }
+        return rake_result;
+      };
+    };
 
     /*
       This method return rake function itself, its different for 
@@ -456,49 +565,22 @@ Timing method decorator
     */
 
 
-    TinyData.prototype._buildRakeFunction = function(rake_rule_type, rake_rule) {
+    TinyData.prototype._buildRakeFunction = function(rake_rule_type, rake_rule, interp_sequence) {
       var _this = this;
       switch (rake_rule_type) {
         case 'REGEXP':
           if (this._dot_decorator_settings_.rakeAny.convert_income_rake_regexp) {
             rake_rule = this.doTransormRegExp(rake_rule);
           }
-          return function(in_array) {
-            var item, key, matched_obj, rake_result, value, _i, _len, _ref1, _ref2;
-            rake_result = {};
-            for (_i = 0, _len = in_array.length; _i < _len; _i++) {
-              item = in_array[_i];
-              if (!(matched_obj = item.match(rake_rule))) {
-                continue;
-              }
-              _ref1 = [matched_obj[2], matched_obj[1].slice(0, -1)], key = _ref1[0], value = _ref1[1];
-              if ((_ref2 = rake_result[key]) == null) {
-                rake_result[key] = [];
-              }
-              rake_result[key].push(value);
-              null;
+          return this._buildCollectorLayout(function(item, emit) {
+            var matched_obj;
+            if (matched_obj = item.match(rake_rule)) {
+              emit(matched_obj[interp_sequence.key], matched_obj[interp_sequence.value]);
+              return null;
             }
-            return rake_result;
-          };
+          });
         case 'FUNCTION':
-          return function(in_array) {
-            var emit, item, rake_result, _i, _len;
-            rake_result = {};
-            emit = function(key, value) {
-              var _ref1;
-              if ((key != null) && (value != null)) {
-                if ((_ref1 = rake_result[key]) == null) {
-                  rake_result[key] = [];
-                }
-                return rake_result[key].push(value);
-              }
-            };
-            for (_i = 0, _len = in_array.length; _i < _len; _i++) {
-              item = in_array[_i];
-              rake_rule.call(_this, item, emit);
-            }
-            return rake_result;
-          };
+          return this._buildCollectorLayout(rake_rule);
         default:
           throw Error("WTF???!!");
       }
@@ -538,39 +620,61 @@ Timing method decorator
     };
 
     /*
-      This method stringify object
+      This method create limiter for long text
     */
 
 
-    TinyData.prototype._doStringify = function(stringify_rule, stubs_list) {
-      var dot_sign, filter_body, innner_loop, is_filter_passed, name_matcher, result_array, string_filter, stringify_pattern,
+    TinyData.prototype._makeStringLimiter = function(max_length) {
+      var _this = this;
+      return function(full_elem_path, elem_content, elem_depth) {
+        var elem_length;
+        elem_length = elem_content.length;
+        if (!(elem_length > max_length)) {
+          return "" + full_elem_path + elem_content;
+        } else {
+          return "" + full_elem_path + "__LONG_TEXT__|" + elem_length + "|";
+        }
+      };
+    };
+
+    /*
+      This method create stringify filter
+      to reduce part of values to speed up stringification and seeking
+    */
+
+
+    TinyData.prototype._makeElementFilter = function(stringify_rule) {
+      var name_matcher, stringify_pattern,
         _this = this;
-      result_array = [];
       name_matcher = (stringify_rule != null ? stringify_rule.origin_pattern : void 0) != null ? (stringify_pattern = stringify_rule.origin_pattern, this._dot_decorator_settings_.rakeStringify.convert_stringify_filter ? stringify_pattern = this.doTransormRegExp(stringify_pattern) : void 0, function(matcher_elem_name, matcher_elem_origin) {
         return matcher_elem_name === stringify_rule.element_name && stringify_pattern.test(matcher_elem_origin);
       }) : function(matcher_elem_name) {
         return matcher_elem_name === stringify_rule.element_name;
       };
-      filter_body = function(elem_origin, elem_name, elem_depth) {
+      return function(elem_origin, elem_name, elem_depth) {
         if (stringify_rule.apply_on_depth === elem_depth) {
           return name_matcher(elem_name, elem_origin);
         } else {
           return true;
         }
       };
-      string_filter = function(full_elem_path, elem_content, elem_depth) {
-        var elem_length;
-        elem_length = elem_content.length;
-        if (!(elem_length > _this._max_text_long_)) {
-          return "" + full_elem_path + elem_content;
-        } else {
-          return "" + full_elem_path + "__LONG_TEXT__|" + elem_length + "|";
-        }
-      };
+    };
+
+    /*
+      This method stringify object
+    */
+
+
+    TinyData.prototype._doStringify = function(stringify_rule, stubs_list) {
+      var dot_sign, filter_body, innner_loop, is_filter_passed, result_array, string_limiter,
+        _this = this;
+      filter_body = this._makeElementFilter(stringify_rule);
+      string_limiter = this._makeStringLimiter(this._max_text_long_);
       is_filter_passed = stringify_rule != null ? filter_body : function() {
         return true;
       };
       dot_sign = this.getPathDelimiter('internal');
+      result_array = [];
       innner_loop = function(in_obj, prefix, depth) {
         var idx, in_obj_type, key, obj_keys, value, _i, _j, _len, _len1;
         switch (in_obj_type = _this._getItType(in_obj)) {
@@ -603,7 +707,7 @@ Timing method decorator
             result_array.push("" + prefix + in_obj);
             break;
           case 'STRING':
-            result_array.push(string_filter(prefix, in_obj, depth));
+            result_array.push(string_limiter(prefix, in_obj, depth));
             break;
           case 'DATE':
           case 'REGEXP':

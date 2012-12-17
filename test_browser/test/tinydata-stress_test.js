@@ -99,7 +99,7 @@ Its so wrong, but its OK for test
         return _.size(huge_result['soul']).should.be.a.equal(32768);
       });
     });
-    describe('#sortOutVerso() without optimization', function() {
+    describe('#seekOutVerso() without optimization', function() {
       beforeEach(function() {
         return huge_array = _.union([], users);
       });
@@ -111,7 +111,7 @@ Its so wrong, but its OK for test
         object_td = new TinyData(huge_array, {
           timing: true
         });
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(20480);
         return _.size(huge_result['soul']).should.be.a.equal(8192);
       });
@@ -123,7 +123,7 @@ Its so wrong, but its OK for test
         object_td = new TinyData(huge_array, {
           timing: true
         });
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(40960);
         return _.size(huge_result['soul']).should.be.a.equal(16384);
       });
@@ -135,12 +135,12 @@ Its so wrong, but its OK for test
         object_td = new TinyData(huge_array, {
           timing: true
         });
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(81920);
         return _.size(huge_result['soul']).should.be.a.equal(32768);
       });
     });
-    describe('#sortOutVerso() with rakeStringify pre-filter (with strict settings)', function() {
+    describe('#seekOutVerso() with rakeStringify pre-filter (with strict settings)', function() {
       beforeEach(function() {
         huge_array = _.union([], users);
         return stringify_filter = {
@@ -158,7 +158,7 @@ Its so wrong, but its OK for test
           timing: true
         });
         object_td.rakeStringify(stringify_filter);
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(20480);
         return _.size(huge_result['soul']).should.be.a.equal(8192);
       });
@@ -171,7 +171,7 @@ Its so wrong, but its OK for test
           timing: true
         });
         object_td.rakeStringify(stringify_filter);
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(40960);
         return _.size(huge_result['soul']).should.be.a.equal(16384);
       });
@@ -184,12 +184,12 @@ Its so wrong, but its OK for test
           timing: true
         });
         object_td.rakeStringify(stringify_filter);
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(81920);
         return _.size(huge_result['soul']).should.be.a.equal(32768);
       });
     });
-    return describe('#sortOutVerso() with rakeStringify pre-filter (with moderate settings)', function() {
+    return describe('#seekOutVerso() with rakeStringify pre-filter (with moderate settings)', function() {
       beforeEach(function() {
         huge_array = _.union([], users);
         return stringify_filter = {
@@ -206,7 +206,7 @@ Its so wrong, but its OK for test
           timing: true
         });
         object_td.rakeStringify(stringify_filter);
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(20480);
         return _.size(huge_result['soul']).should.be.a.equal(8192);
       });
@@ -219,7 +219,7 @@ Its so wrong, but its OK for test
           timing: true
         });
         object_td.rakeStringify(stringify_filter);
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(40960);
         return _.size(huge_result['soul']).should.be.a.equal(16384);
       });
@@ -232,7 +232,7 @@ Its so wrong, but its OK for test
           timing: true
         });
         object_td.rakeStringify(stringify_filter);
-        huge_result = object_td.sortOutVerso(user_like_rpath);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
         _.size(huge_array).should.be.a.equal(81920);
         return _.size(huge_result['soul']).should.be.a.equal(32768);
       });

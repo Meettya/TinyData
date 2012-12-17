@@ -37,7 +37,7 @@ block content
               null
             null
           
-          comments_ratings = object_td.sortOutVerso comments_ratings_rule, comments_finalizer
+          comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer
           show_data_1 in_data, comments_ratings
           null
 
@@ -58,8 +58,8 @@ block content
           TinyData = require 'tinydata'
           object_td = new TinyData in_data, debug : yes
           post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
-          post_with_comments = object_td.sortOutVerso post_with_comments_rule
-          post_without_comments = object_td.sortOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'
+          post_with_comments = object_td.seekOutVerso post_with_comments_rule
+          post_without_comments = object_td.seekOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'
           all_posts = _.assign post_with_comments, post_without_comments
           show_data_2 all_posts
           null
@@ -97,7 +97,7 @@ block content
             null
 
           rating_values_rule = make_rating_values_rule object_td.doTransormRegExp
-          posts_with_raitings = object_td.sortOutVerso rating_values_rule, rating_aggregator
+          posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator
           show_data_3 posts_with_raitings
           null
 
@@ -196,7 +196,7 @@ block content
           | В данном случае мы округляем рейтинги каждой записи, для удобства,
           | фактически работая над ключем, а не значением.
 
-        pre.prettyprint comments_ratings = object_td.sortOutVerso comments_ratings_rule, comments_finalizer
+        pre.prettyprint comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer
         p 
           | Собственно, это основной метод объекта 
           strong TinyData
@@ -250,13 +250,13 @@ block content
           | В данном случае вторая скобка внутри первой, соответственно результат
           | превращается в массив материализованных путей внутри объекта.
         
-        pre.prettyprint post_with_comments = object_td.sortOutVerso post_with_comments_rule
+        pre.prettyprint post_with_comments = object_td.seekOutVerso post_with_comments_rule
         p
           | По факту мы выбираем все записи у которых 
           strong есть
           |  комментарии.
 
-        pre.prettyprint post_without_comments = object_td.sortOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'
+        pre.prettyprint post_without_comments = object_td.seekOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'
         p
           | В данном случае правило представлено строкой, а не объектом регулярного выражения.
         p
@@ -397,7 +397,7 @@ block content
           | Кроме того поручим объекту заодно и высчитать среднее арифметическое
           | от наших рейтингов из комментариев.
 
-        pre.prettyprint posts_with_raitings = object_td.sortOutVerso rating_values_rule, rating_aggregator
+        pre.prettyprint posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator
 
         p
           | Поручаем объекту посчитать все, используя правила обработки и финализации.
