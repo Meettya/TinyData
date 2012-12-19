@@ -83,21 +83,25 @@ block content
           TinyData = require 'tinydata'
           object_td = new TinyData in_data, debug : yes
 
-          make_rating_values_rule = (regexp_transform_fn) ->
-            transformed_regexp = regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
-            
+
+          make_rating_values_rule = (regexp_transform_fn, path_delimiter) ->
+            transformed_verifyed_rating_regexp = regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+            anonymous_rating_rule = "^(\\d+)#{path_delimiter}rating#{path_delimiter}([^#{path_delimiter}]+)"
             (stringifyed_item, emit) ->
-              if mached_data = stringifyed_item.match transformed_regexp
-                emit mached_data[1], mached_data[2]
+              if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+                emit mached_data[1], parseFloat mached_data[2]
+              else if mached_data = stringifyed_item.match anonymous_rating_rule
+                emit "_#{mached_data[1]}", parseFloat mached_data[2]
               null
 
           rating_aggregator = (key, values, emit) -> 
-            sum_of_all_rating = _.reduce values, (memo, num) -> parseFloat(memo) + parseFloat num
+            sum_of_all_rating = _.reduce values, (memo, num) -> memo + num
             emit key, sum_of_all_rating / values.length 
             null
 
-          rating_values_rule = make_rating_values_rule object_td.doTransormRegExp
+          rating_values_rule = make_rating_values_rule object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'
           posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator
+
           show_data_3 posts_with_raitings
           null
 
@@ -156,7 +160,7 @@ block content
         p
           | Создаем объект, на входе 
           strong JSON
-          |  данные, первый аргумент - обязательный, а вторым следуют опциональные
+          |  данные - первый аргумент, а вторым следуют опциональные
           | настройки
           em  (результат включенного режима отладки можно посмотреть в консоли)
           | .
@@ -166,7 +170,7 @@ block content
         p
           strong RegExp
           | -правило для отбора необходимых нам данных.
-          | Первая сохраняющая скобка дает нам значения, вторая - ключи, 
+          | Первая сохраняющая скобка даст нам значения, вторая - ключи, 
           | обработка происходит построчно для каждой записи материализованного пути.
         p  
           | Процесс можно представить как индексацию по вторичному ключу, а в
@@ -198,10 +202,35 @@ block content
 
         pre.prettyprint comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer
         p 
-          | Собственно, это основной метод объекта 
+          | Собственно, это один из двух основных методов объекта 
           strong TinyData
           | , который материализует путь (если он отсутствует в кеше),
           | затем делает выборку и далее финализирует данные.
+
+        span.label.label-info Кое-что важное!
+        div.well
+          p
+            strong #seekOutVerso()
+            |  означает, что интерпретация результатов 
+            strong RegExp
+            | -правила будет происходить в 
+            em обратном 
+            |  порядке:
+            | первая сохраняющая скобка сохраняется как значения, вторая как ключи.
+
+          p
+            strong #seekOut()
+            |  означает, что интерпретация результатов 
+            strong RegExp
+            | -правила будет происходить в 
+            em прямом
+            |  порядке:
+            | первая сохраняющая скобка сохраняется как ключи, вторая - как значения. 
+
+          p 
+            | Кроме того можно задать произвольные номера скобок для ключа и значения
+          p
+            code seekOutVerso rule, finalizer, key : 4, value : 3
 
         p 
           | Все, результатом данного метода является объект с данными вида 
@@ -299,7 +328,7 @@ block content
 
     div.span8
       section#weight_rating
-        h4 Рейтинг с весовыми коэффициентами
+        h4 Рейтинг с весовыми коэффициентами (подготовка данных)
         span.label.label-warning Disclamer
         div.well
           p
@@ -312,6 +341,11 @@ block content
           p
             | Для случая, когда есть только оценки анонимусов, они будут иметь 50% веса,
             | а оставшиеся 50% будет составлять виртуальная базовая 3-ка (будем считать, что авторы пишут средне)
+
+          p 
+            |  PS. Здесь будет показана только подготовка данных, использование - в разделе 
+            a(href='demo.html') Демо
+            | . 
 
       div.span10 
         p
@@ -337,14 +371,17 @@ block content
           a(href='#rating') примере выше
           | .
 
-        pre.prettyprint make_rating_values_rule = (regexp_transform_fn) ->
-          |   transformed_regexp = regexp_transform_fn \
-          |      /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
-          |  
-          |   (stringifyed_item, emit) ->
-          |     if mached_data = stringifyed_item.match transformed_regexp
-          |       emit mached_data[1], mached_data[2]
-          |     null
+        pre.prettyprint make_rating_values_rule = (regexp_transform_fn, path_delimiter) ->
+          |  transformed_verifyed_rating_regexp = \
+          |     regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+          |  anonymous_rating_rule = \
+          |     "^(\\d+)\#{path_delimiter}rating\#{path_delimiter}([^\#{path_delimiter}]+)"
+          |  (stringifyed_item, emit) ->
+          |    if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+          |      emit mached_data[1], parseFloat mached_data[2]
+          |    else if mached_data = stringifyed_item.match anonymous_rating_rule
+          |      emit "_\#{mached_data[1]}", parseFloat mached_data[2]
+          |    null
 
         p
           | Тут у нас довольно большой блок кода, однако построчное его разбиение
@@ -370,26 +407,22 @@ block content
             code getPathDelimiter 'internal'
             |  ), или помощником.
 
-        pre.prettyprint rating_values_rule = make_rating_values_rule object_td.doTransormRegExp
+        pre.prettyprint rating_values_rule = make_rating_values_rule \
+          |   object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'
         p 
-          | В данном случае преобразованием занимается помощник, после чего правило в 
+          | В данном случае первым преобразованием занимается помощник,
+          | а для второго выражения мы вручную вставляем разделители
+          | (просто для демонстрации, на самом деле можно было сделать оба поиска, используя 
+          strong #seekOut()
+          |   )
+          |  после чего правило в 
           | виде функции приходит к нам обратно. Замыкание здесь используется по соображениям скорости обработки,
           | ведь функция правила просмотра 
           strong будет вызываться на каждую строку
           |  материализованного пути. Держите это в уме.
 
-        p
-          | Все сложности реализации вышли из того, что нам требуется свернуть 
-          | данные по первичному ключу (индексу поста в массиве), т.е. ключем у нас
-          | должна быть 
-          strong первая
-          |  скобка, а значением - 
-          strong вторая
-          | .
-
         pre.prettyprint rating_aggregator = (key, values, emit) -> 
-          |   sum_of_all_rating = _.reduce values, (memo, num) ->
-          |     parseFloat(memo) + parseFloat num
+          |   sum_of_all_rating = _.reduce values, (memo, num) -> memo + num
           |   emit key, sum_of_all_rating / values.length
           |   null
 

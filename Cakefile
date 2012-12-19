@@ -80,10 +80,17 @@ build_lib_node = (cb) ->
 
 # this for TinyData dependency
 build_lib_node_dependency = (cb) ->
-  dependency_dir = path.join paths.src_dir, 'lib'
-  dependency_lib_dir = path.join paths.lib_dir, 'lib'
-  commands.build_coffee cb, dependency_dir, dependency_lib_dir, /\.coffee$/
+  build_lib_node_internal_lib( build_lib_node_internal_mixin cb )
 
+build_lib_node_internal_lib = (cb) ->
+  internal_lib_dir = path.join paths.src_dir, 'lib'
+  internal_lib_lib_dir = path.join paths.lib_dir, 'lib'
+  commands.build_coffee cb, internal_lib_dir, internal_lib_lib_dir, /\.coffee$/
+
+build_lib_node_internal_mixin = (cb) ->
+  internal_mixin_dir = path.join paths.src_dir, 'mixin'
+  internal_mixin_lib_dir = path.join paths.lib_dir, 'mixin'
+  commands.build_coffee cb, internal_mixin_dir, internal_mixin_lib_dir, /\.coffee$/
 
 #task 'build_lib_browser', 'build stitched module for browser', 
 build_lib_browser = (cb) ->

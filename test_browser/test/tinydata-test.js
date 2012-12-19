@@ -113,6 +113,7 @@ Its so wrong, but its OK for test
     ];
     user_like_rake_rule = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$';
     userRakeFinalize = function(key, value, emit) {
+      var _this = this;
       return _.map(value, function(user_id) {
         return emit(key, users[user_id].name);
       });

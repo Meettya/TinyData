@@ -42,6 +42,7 @@
 
 }).call(this);
 </script>
+    <link rel="stylesheet" href="css/stars.css">
     <!-- only head.js needed at first-->
     <script src="vendor/head.load-0.99.min.js"></script>
     <!--head.js loader--><script type="text/javascript">
@@ -61,29 +62,70 @@
           This is second example code
       */
 
-      var code_example_2, comment_template, get_by_path, post_template, show_blog_example;
-      post_template = _.template("<strong>Title:</strong>  <span><%= post_data.title %></span></br>\n<strong>Author:</strong>  <span><%= post_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= post_data.text %></span></br>\n<span class=\"btn btn-primary btn-small <%= comment_num ? 'active': 'disabled' %>\" data-toggle=\"collapse\" data-target=\"#comments_to_<%= post_idx %>\">Comments (<%= comment_num %>):<span></br>");
+      var calculate_rating, comment_template, post_template, show_blog_example;
+      post_template = _.template("<div class=\"stars empty\">\n  <div class=\"stars filled_<%= average_rating %>\"></div>\n</div>\n<strong>Title:</strong>  <span><%= post_data.title %></span></br>\n<strong>Author:</strong>  <span><%= post_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= post_data.text %></span></br>\n<span class=\"btn btn-primary btn-small <%= comment_num ? 'active': 'disabled' %>\" data-toggle=\"collapse\" data-target=\"#comments_to_<%= post_idx %>\">Comments (<%= comment_num %>):<span></br>");
       comment_template = _.template("<div class=\"span5 offset<%= comment_shift %> well\">\n<strong>Author:</strong>  <span><%= comment_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= comment_data.text %></span></br>\n</div>");
-      /*
-          tiny helper, will be included in TinyData
-      */
-
-      get_by_path = function(obj, path) {
-        var steps;
-        steps = path.split('.');
-        return _.reduce(steps, (function(obj, i) {
-          return obj[i];
-        }), obj);
+      calculate_rating = function(object_td) {
+        var fake_key, make_rating_values_rule, posts_with_raitings, rating_aggregator, rating_stub, rating_values_rule, real_key, verifyed_rating, _i, _len, _ref;
+        make_rating_values_rule = function(regexp_transform_fn, path_delimiter) {
+          var anonymous_rating_rule, transformed_verifyed_rating_regexp;
+          transformed_verifyed_rating_regexp = regexp_transform_fn(/^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/);
+          anonymous_rating_rule = "^(\\d+)" + path_delimiter + "rating" + path_delimiter + "([^" + path_delimiter + "]+)";
+          return function(stringifyed_item, emit) {
+            var mached_data;
+            if (mached_data = stringifyed_item.match(transformed_verifyed_rating_regexp)) {
+              emit(mached_data[1], parseFloat(mached_data[2]));
+            } else if (mached_data = stringifyed_item.match(anonymous_rating_rule)) {
+              emit("_" + mached_data[1], parseFloat(mached_data[2]));
+            }
+            return null;
+          };
+        };
+        rating_aggregator = function(key, values, emit) {
+          var sum_of_all_rating;
+          sum_of_all_rating = _.reduce(values, function(memo, num) {
+            return memo + num;
+          });
+          emit(key, sum_of_all_rating / values.length);
+          return null;
+        };
+        rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp, object_td.getPathDelimiter('internal'));
+        posts_with_raitings = object_td.seekOutVerso(rating_values_rule, rating_aggregator);
+        rating_stub = 3;
+        _ref = _.keys(posts_with_raitings);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          fake_key = _ref[_i];
+          if (!('_' === fake_key.charAt(0))) {
+            continue;
+          }
+          real_key = fake_key.slice(1);
+          verifyed_rating = posts_with_raitings[real_key];
+          if (verifyed_rating) {
+            posts_with_raitings[real_key] = Math.ceil((posts_with_raitings[fake_key] * 0.2 + posts_with_raitings[real_key] * 0.8) * 2);
+          } else {
+            posts_with_raitings[real_key] = Math.ceil((posts_with_raitings[fake_key] * 0.5 + rating_stub * 0.5) * 2);
+          }
+          delete posts_with_raitings[fake_key];
+        }
+        return posts_with_raitings;
       };
-      show_blog_example = function(in_data, processed_data) {
-        var main_container;
+      show_blog_example = function(in_data) {
+        var TinyData, main_container, object_td, post_with_comments_rule, processed_data, ratings_for_post;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
+        processed_data = object_td.seekOutVerso(post_with_comments_rule);
+        ratings_for_post = calculate_rating(object_td);
         main_container = $('<div>');
         _.each(in_data, function(post_prop, post_idx) {
           var comment_container, post, post_object, _ref;
           post_object = {
             post_idx: post_idx,
             post_data: in_data[post_idx],
-            comment_num: (_ref = processed_data[post_idx]) != null ? _ref.length : void 0
+            comment_num: (_ref = processed_data[post_idx]) != null ? _ref.length : void 0,
+            average_rating: ratings_for_post[post_idx]
           };
           _.defaults(post_object, {
             comment_num: 0
@@ -94,7 +136,7 @@
             var comment, comment_object, comment_shift;
             comment_shift = (comment_path.split('.').length - 3) / 2;
             comment_object = {
-              comment_data: get_by_path(in_data, comment_path),
+              comment_data: object_td.getDataByPath(comment_path),
               comment_shift: comment_shift
             };
             return comment = $("<div class='row'>").html(comment_template(comment_object)).appendTo(comment_container);
@@ -102,18 +144,7 @@
         });
         return main_container.appendTo($('.blog_examlpe'));
       };
-      code_example_2 = function(in_data) {
-        var TinyData, object_td, post_with_comments, post_with_comments_rule;
-        TinyData = require('tinydata');
-        object_td = new TinyData(in_data, {
-          debug: true
-        });
-        post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
-        post_with_comments = object_td.seekOutVerso(post_with_comments_rule);
-        show_blog_example(in_data, post_with_comments);
-        return null;
-      };
-      return $.getJSON("example/blog_example_data.json", code_example_2);
+      return $.getJSON("example/blog_example_data.json", show_blog_example);
     });
   });
 
@@ -124,21 +155,25 @@
       <div class="span8"><span class="label label-important">Внимание!</span>
         <div class="well">
           <p>Смертельный номер, работа без каната!</p><em>Ну ну дизайнер я, чувство прекрасного меня ненавидит :)</em>
+          <p><em>Помогите с версткой, а?</em></p>
         </div>
       </div>
       <div class="span8">
         <p>
           Итого для формирования страницы а-ля блог, 
           имея на входе только сырые данные а-ля выдача MongoDB,
-          мы использовали
+          мы использовали:
           <ul class="unstyled">
             <li>1шт. RegExp (довольно простой и понятный)</li>
             <li>2шт. _.each нерекурсивной природы</li>
             <li>2шт. _.template</li>
-            <li>1шт. хелпер, возвращающий объект по dot-нотации</li>
           </ul> 
-          В сумме 46 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
-          без гольфизма.
+          В сумме 40 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
+          без гольфизма (в нотации Coffeescript) для "блога".
+        </p>
+        <p>
+          Плюс 30 строк для рейтинга, не особо утруждая себя в сокращении кода.
+          На него так же пойдет пара RegExp-ов, и немного итераторов.
         </p>
       </div>
       <div class="blog_examlpe"></div>

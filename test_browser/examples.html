@@ -131,13 +131,16 @@
         object_td = new TinyData(in_data, {
           debug: true
         });
-        make_rating_values_rule = function(regexp_transform_fn) {
-          var transformed_regexp;
-          transformed_regexp = regexp_transform_fn(/^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/);
+        make_rating_values_rule = function(regexp_transform_fn, path_delimiter) {
+          var anonymous_rating_rule, transformed_verifyed_rating_regexp;
+          transformed_verifyed_rating_regexp = regexp_transform_fn(/^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/);
+          anonymous_rating_rule = "^(\\d+)" + path_delimiter + "rating" + path_delimiter + "([^" + path_delimiter + "]+)";
           return function(stringifyed_item, emit) {
             var mached_data;
-            if (mached_data = stringifyed_item.match(transformed_regexp)) {
-              emit(mached_data[1], mached_data[2]);
+            if (mached_data = stringifyed_item.match(transformed_verifyed_rating_regexp)) {
+              emit(mached_data[1], parseFloat(mached_data[2]));
+            } else if (mached_data = stringifyed_item.match(anonymous_rating_rule)) {
+              emit("_" + mached_data[1], parseFloat(mached_data[2]));
             }
             return null;
           };
@@ -145,12 +148,12 @@
         rating_aggregator = function(key, values, emit) {
           var sum_of_all_rating;
           sum_of_all_rating = _.reduce(values, function(memo, num) {
-            return parseFloat(memo) + parseFloat(num);
+            return memo + num;
           });
           emit(key, sum_of_all_rating / values.length);
           return null;
         };
-        rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp);
+        rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp, object_td.getPathDelimiter('internal'));
         posts_with_raitings = object_td.seekOutVerso(rating_values_rule, rating_aggregator);
         show_data_3(posts_with_raitings);
         return null;
@@ -200,12 +203,12 @@
             , поэтому после загрузки его кода запрашиваем класс<em> (возможно данное поведение будет изменено)</em>.
           </p>
           <pre class="prettyprint">object_td = new TinyData in_data, debug : yes</pre>
-          <p>Создаем объект, на входе <strong>JSON</strong> данные, первый аргумент - обязательный, а вторым следуют опциональные
+          <p>Создаем объект, на входе <strong>JSON</strong> данные - первый аргумент, а вторым следуют опциональные
             настройки<em> (результат включенного режима отладки можно посмотреть в консоли)</em>.
           </p>
           <pre class="prettyprint">comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/</pre>
           <p><strong>RegExp</strong>-правило для отбора необходимых нам данных.
-            Первая сохраняющая скобка дает нам значения, вторая - ключи, 
+            Первая сохраняющая скобка даст нам значения, вторая - ключи, 
             обработка происходит построчно для каждой записи материализованного пути.
           </p>
           <p>
@@ -235,9 +238,22 @@
           <pre class="prettyprint">comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer</pre>
           <p>
              
-            Собственно, это основной метод объекта <strong>TinyData</strong>, который материализует путь (если он отсутствует в кеше),
+            Собственно, это один из двух основных методов объекта <strong>TinyData</strong>, который материализует путь (если он отсутствует в кеше),
             затем делает выборку и далее финализирует данные.
-          </p>
+          </p><span class="label label-info">Кое-что важное!</span>
+          <div class="well">
+            <p><strong>#seekOutVerso()</strong> означает, что интерпретация результатов <strong>RegExp</strong>-правила будет происходить в <em>обратном </em> порядке:
+              первая сохраняющая скобка сохраняется как значения, вторая как ключи.
+            </p>
+            <p><strong>#seekOut()</strong> означает, что интерпретация результатов <strong>RegExp</strong>-правила будет происходить в <em>прямом</em> порядке:
+              первая сохраняющая скобка сохраняется как ключи, вторая - как значения. 
+            </p>
+            <p>
+               
+              Кроме того можно задать произвольные номера скобок для ключа и значения
+            </p>
+            <p><code>seekOutVerso rule, finalizer, key : 4, value : 3</code></p>
+          </div>
           <p>
              
             Все, результатом данного метода является объект с данными вида <code>оценка -> список комментариев</code>. 
@@ -294,7 +310,7 @@ object_td = new TinyData in_data, debug : yes</pre>
       </div>
       <div class="span8">
         <section id="weight_rating">
-          <h4>Рейтинг с весовыми коэффициентами</h4><span class="label label-warning">Disclamer</span>
+          <h4>Рейтинг с весовыми коэффициентами (подготовка данных)</h4><span class="label label-warning">Disclamer</span>
           <div class="well">
             <p>Этот пример нуждается в пояснении интерпретации данных.</p>
             <p>
@@ -306,6 +322,10 @@ object_td = new TinyData in_data, debug : yes</pre>
             <p>
               Для случая, когда есть только оценки анонимусов, они будут иметь 50% веса,
               а оставшиеся 50% будет составлять виртуальная базовая 3-ка (будем считать, что авторы пишут средне)
+            </p>
+            <p>
+               
+               PS. Здесь будет показана только подготовка данных, использование - в разделе <a href="demo.html">Демо</a>. 
             </p>
           </div>
         </section>
@@ -325,14 +345,17 @@ object_td = new TinyData in_data, debug : yes</pre>
           <pre class="prettyprint">TinyData = require 'tinydata'
 object_td = new TinyData in_data, debug : yes</pre>
           <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
-          <pre class="prettyprint">make_rating_values_rule = (regexp_transform_fn) -&gt;
-  transformed_regexp = regexp_transform_fn \
-     /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
- 
-  (stringifyed_item, emit) -&gt;
-    if mached_data = stringifyed_item.match transformed_regexp
-      emit mached_data[1], mached_data[2]
-    null</pre>
+          <pre class="prettyprint">make_rating_values_rule = (regexp_transform_fn, path_delimiter) -&gt;
+ transformed_verifyed_rating_regexp = \
+    regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+ anonymous_rating_rule = \
+    &quot;^(\\d+)#{path_delimiter}rating#{path_delimiter}([^#{path_delimiter}]+)&quot;
+ (stringifyed_item, emit) -&gt;
+   if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+     emit mached_data[1], parseFloat mached_data[2]
+   else if mached_data = stringifyed_item.match anonymous_rating_rule
+     emit &quot;_#{mached_data[1]}&quot;, parseFloat mached_data[2]
+   null</pre>
           <p>
             Тут у нас довольно большой блок кода, однако построчное его разбиение
             бессмысленно, будем описывать целиком.
@@ -351,21 +374,19 @@ object_td = new TinyData in_data, debug : yes</pre>
               вручную (получив у объекта <strong>TinyData</strong> значение разделителя методом <code>getPathDelimiter 'internal'</code> ), или помощником.
             </p>
           </div>
-          <pre class="prettyprint">rating_values_rule = make_rating_values_rule object_td.doTransormRegExp</pre>
+          <pre class="prettyprint">rating_values_rule = make_rating_values_rule \
+  object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'</pre>
           <p>
              
-            В данном случае преобразованием занимается помощник, после чего правило в 
+            В данном случае первым преобразованием занимается помощник,
+            а для второго выражения мы вручную вставляем разделители
+            (просто для демонстрации, на самом деле можно было сделать оба поиска, используя <strong>#seekOut()</strong>  )
+             после чего правило в 
             виде функции приходит к нам обратно. Замыкание здесь используется по соображениям скорости обработки,
             ведь функция правила просмотра <strong>будет вызываться на каждую строку</strong> материализованного пути. Держите это в уме.
           </p>
-          <p>
-            Все сложности реализации вышли из того, что нам требуется свернуть 
-            данные по первичному ключу (индексу поста в массиве), т.е. ключем у нас
-            должна быть <strong>первая</strong> скобка, а значением - <strong>вторая</strong>.
-          </p>
           <pre class="prettyprint">rating_aggregator = (key, values, emit) -&gt; 
-  sum_of_all_rating = _.reduce values, (memo, num) -&gt;
-    parseFloat(memo) + parseFloat num
+  sum_of_all_rating = _.reduce values, (memo, num) -&gt; memo + num
   emit key, sum_of_all_rating / values.length
   null</pre>
           <p>

@@ -164,7 +164,7 @@ describe 'TinyData:', ->
 
   # Substitute position in array to names
   userRakeFinalize = (key, value, emit) -> 
-    _.map value, (user_id) -> emit key, users[user_id].name
+    _.map value, (user_id) => emit key, users[user_id].name
 
   users_finalize_result = 
     'пицца': [ 'Вася', 'Петя', 'Абдулла' ]
