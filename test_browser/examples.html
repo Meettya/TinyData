@@ -16,7 +16,7 @@
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="/" class="brand">TinyData</a>
+        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="index.html" class="brand">TinyData</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="index.html">Home</a></li>
@@ -310,7 +310,7 @@ object_td = new TinyData in_data, debug : yes</pre>
       </div>
       <div class="span8">
         <section id="weight_rating">
-          <h4>Рейтинг с весовыми коэффициентами (подготовка данных)</h4><span class="label label-warning">Disclamer</span>
+          <h4>Рейтинг с весовыми коэффициентами (подготовка данных)</h4><span class="label label-warning">Пояснение</span>
           <div class="well">
             <p>Этот пример нуждается в пояснении интерпретации данных.</p>
             <p>
@@ -321,7 +321,7 @@ object_td = new TinyData in_data, debug : yes</pre>
             </p>
             <p>
               Для случая, когда есть только оценки анонимусов, они будут иметь 50% веса,
-              а оставшиеся 50% будет составлять виртуальная базовая 3-ка (будем считать, что авторы пишут средне)
+              а оставшиеся 50% будет составлять виртуальная базовая 3-ка из 5 возможных (будем считать, что авторы пишут средне)
             </p>
             <p>
                
@@ -357,8 +357,10 @@ object_td = new TinyData in_data, debug : yes</pre>
      emit &quot;_#{mached_data[1]}&quot;, parseFloat mached_data[2]
    null</pre>
           <p>
-            Тут у нас довольно большой блок кода, однако построчное его разбиение
-            бессмысленно, будем описывать целиком.
+            Тут у нас довольно большой блок кода
+            (просто для демонстрации, на самом деле можно было сделать оба поиска, используя <strong>#seekOut()</strong>  ),
+            однако построчное его разбиение
+            бессмысленно, будем описывать целиком
           </p><span class="label label-info">Кое-что важное!</span>
           <div class="well">
             <p>В качестве третьего варианта правила обработки стрингификации <strong>TinyData </strong> может принимать функцию, в этом случае с каждой строкой можно делать 
@@ -380,8 +382,7 @@ object_td = new TinyData in_data, debug : yes</pre>
              
             В данном случае первым преобразованием занимается помощник,
             а для второго выражения мы вручную вставляем разделители
-            (просто для демонстрации, на самом деле можно было сделать оба поиска, используя <strong>#seekOut()</strong>  )
-             после чего правило в 
+            после чего правило в 
             виде функции приходит к нам обратно. Замыкание здесь используется по соображениям скорости обработки,
             ведь функция правила просмотра <strong>будет вызываться на каждую строку</strong> материализованного пути. Держите это в уме.
           </p>

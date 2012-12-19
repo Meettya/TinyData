@@ -16,7 +16,7 @@
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="/" class="brand">TinyData</a>
+        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="index.html" class="brand">TinyData</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="index.html">Home</a></li>
@@ -119,7 +119,7 @@
           произвольной глубины вложения.
         </p>
         <p>
-          Источником таких данных может быть, документ-ориентированнная
+          Источником таких данных может быть документ-ориентированнная
           DB, например <strong>MongoDB</strong> или любой иной источник <strong>JSON</strong> данных.
         </p>
       </div>
@@ -148,7 +148,7 @@
         </p>
       </div>
       <div class="span8">
-        <p>Запрос для получения рейтинга каждого комментария выглядит так:</p>
+        <p>Например так может выглядеть запрос для получения рейтинга каждого комментария:</p>
         <pre class="prettyprint"> /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/</pre>
       </div>
       <div class="span10"> 
@@ -158,9 +158,61 @@
         </div>
       </div>
       <div class="span8">
+        <p> <em>
+             
+            Посмотреть полный код <a href="examples.html#rating">агрегирования рейтинга</a> можно в разделе <a href="examples.html">Примеры</a> или <a href="demo.html">Демо</a>.</em></p>
+      </div>
+      <div class="span8">
         <p>
            
-          Посмотреть полный код <a href="examples.html#rating">агрегирования рейтинга</a> можно в разделе <a href="examples.html">Примеры</a>.
+          Кроме того, для поиска можно использовать строку, которая будет преобразована
+          в регулярное выражение, или даже функцию.
+        </p>
+        <p>
+          Функция является самым мощным вариантом, но она требует больших телодвижений
+          и более глубокого понимания происходящего.
+        </p>
+      </div>
+      <div class="span8">
+        <p>
+           
+          Для целей "причесывания" результатов может применяться финализатор -
+          так же функция, в которой можно работать как над значаниями, так и над ключами.
+        </p>
+      </div>
+      <div class="span8">
+        <h2>Тюнинг</h2>
+        <p>
+           
+          В целях ускорения работы над большими объемами данных реализован 
+          механизм настройки процесса стрингификации (материализации пути) с фильтрацией, 
+          кроме того значения в виде длинных строк (более 120 символов) усекаются
+          до сообщения <code>__LONG_TEXT__|355|</code> где 355 - длина в символах <em>(пользовательская настройка длины будет реализована, но позднее)</em>.
+        </p>
+        <p>
+           
+          Примеры тюнинга и его результативность можно посмотреть в разделе <a href="test.html">Тесты</a>, пункт <a href="stress_test.html" target="_blank">Do stress test on big data</a>.   
+        </p>
+        <p>
+           
+          На данном этапе тюнингом можно добиться примерно 1.5-кратного прироста производительности,
+          если же этого мало - вероятнее всего следует использовать нативные итераторы.
+        </p>
+      </div>
+      <div class="span8">
+        <h2>Disclaimer</h2>
+        <p>
+           
+          На данный момент проект находится в beta-версии, изменения API маловероятны, 
+          но возможны.
+        </p>
+      </div>
+      <div class="span8">
+        <h2>Need help</h2>
+        <p>
+           
+          Если вы нашли <strong>TinyData</strong> интересной, но вас что-то смущает - известите меня об этом любым удобным вам образом,
+          например <a href="mailto:meettya@gmail.com?subject=TinyData%20feedback">напишите e-mail </a> или <a href="https://github.com/Meettya/TinyData/issues" target="_blank">откройте issue</a>. 
         </p>
       </div>
     </div>
