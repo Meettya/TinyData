@@ -1,0 +1,442 @@
+extends includes/layout
+
+block content
+
+  // only head.js needed at first
+  script(src='vendor/head.load-0.99.min.js')
+
+  //head.js loader
+  :coffeescript
+    head.js "vendor/lodash-1.0.0-rc.1.min.js",
+    { tinydata : "js/tinydata.js" }
+
+  :coffeescript
+
+    # to prettify our per-line explanation
+    $ -> prettyPrint()
+
+    head.ready "tinydata", ->
+      $ ->
+        ###
+        This is first example code
+        ###
+        show_data_1 = (in_data, result) ->
+          $(".rating_result").children().text JSON.stringify result, null, 2
+          $(".rating_data").children().text JSON.stringify in_data, null, 2
+          prettyPrint()
+          null
+
+        code_example_1 = (in_data) ->
+
+          TinyData = require 'tinydata'
+          object_td = new TinyData in_data, debug : yes
+          comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/
+          comments_finalizer = (key, values, emit) -> 
+            _.each values, (item) -> 
+              emit Math.ceil(key), item
+              null
+            null
+          
+          comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer
+          show_data_1 in_data, comments_ratings
+          null
+
+        $(".rating_code").children().text code_example_1.toString()
+
+        $.getJSON "example/blog_example_data.json", code_example_1
+   
+        ###
+        This is second example code
+        ###
+        show_data_2 = (result) ->
+          $(".flat_tree_result").children().text JSON.stringify result, null, 2
+          prettyPrint()
+          null
+
+        code_example_2 = (in_data) ->
+
+          TinyData = require 'tinydata'
+          object_td = new TinyData in_data, debug : yes
+          post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
+          post_with_comments = object_td.seekOutVerso post_with_comments_rule
+          post_without_comments = object_td.seekOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'
+          all_posts = _.assign post_with_comments, post_without_comments
+          show_data_2 all_posts
+          null
+
+        $(".flat_tree_code").children().text code_example_2.toString()
+
+        $.getJSON "example/blog_example_data.json", code_example_2
+
+
+        ###
+        This is third code example
+        ###
+
+        show_data_3 = (result) ->
+          $(".weight_rating_result").children().text JSON.stringify result, null, 2
+          prettyPrint()
+          null
+
+        code_example_3 = (in_data) ->
+
+          TinyData = require 'tinydata'
+          object_td = new TinyData in_data, debug : yes
+
+
+          make_rating_values_rule = (regexp_transform_fn, path_delimiter) ->
+            transformed_verifyed_rating_regexp = regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+            anonymous_rating_rule = "^(\\d+)#{path_delimiter}rating#{path_delimiter}([^#{path_delimiter}]+)"
+            (stringifyed_item, emit) ->
+              if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+                emit mached_data[1], parseFloat mached_data[2]
+              else if mached_data = stringifyed_item.match anonymous_rating_rule
+                emit "_#{mached_data[1]}", parseFloat mached_data[2]
+              null
+
+          rating_aggregator = (key, values, emit) -> 
+            sum_of_all_rating = _.reduce values, (memo, num) -> memo + num
+            emit key, sum_of_all_rating / values.length 
+            null
+
+          rating_values_rule = make_rating_values_rule object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'
+          posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator
+
+          show_data_3 posts_with_raitings
+          null
+
+        $(".weight_rating_code").children().text code_example_3.toString()
+
+        $.getJSON "example/blog_example_data.json", code_example_3
+
+  div.container
+    h1 TinyData Examples
+
+    div.span8
+      span.label.label-important Внимание!
+      div.well
+        p
+          | В коде примеров используются функции из модуля 
+          a(href="http://lodash.com/", target='_blank') lodash
+          |  для упрощения рутинных операций, построчная разборка кода приводится в нотации
+          strong  Coffeescript
+          |  по причине более удобного синтаксиса
+          em  (в дальнейшем, вероятно, будет создан отдельный раздел для JS-нотации)
+          | .
+        p 
+          | Однако, в листингах выводится JS код, т.к. это тот самый код,
+          | который исполняется на данной странице. Да, вы считаете результаты сами.
+
+    div.span8
+      section#rating
+        h4 Получение рейтинга всех комментариев
+
+      div.span10 
+        p
+          a(href="#rating", data-toggle="collapse", data-target=".rating_data" ) исходные данные (много)...
+        div.rating_data.collapse
+          pre.prettyprint.pre-scrollable
+
+        p
+          a(href="#rating", data-toggle="collapse", data-target=".rating_code" ) листинг кода...
+        div.rating_code.collapse
+          pre.prettyprint
+
+        p
+          a(href="#rating", data-toggle="collapse", data-target=".rating_result" ) результат...
+        div.rating_result.collapse
+          pre.prettyprint
+
+      div.span9
+        h5 Построчный разбор кода в нотации Coffeescript
+        pre.prettyprint TinyData = require 'tinydata'
+        p
+          | TinyData на данный момент собирается для браузера как псевдо-CommonJS модуль
+          | , поэтому после загрузки его кода запрашиваем класс
+          em  (возможно данное поведение будет изменено)
+          | .
+
+        pre.prettyprint object_td = new TinyData in_data, debug : yes
+        p
+          | Создаем объект, на входе 
+          strong JSON
+          |  данные - первый аргумент, а вторым следуют опциональные
+          | настройки
+          em  (результат включенного режима отладки можно посмотреть в консоли)
+          | .
+
+
+        pre.prettyprint comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/
+        p
+          strong RegExp
+          | -правило для отбора необходимых нам данных.
+          | Первая сохраняющая скобка даст нам значения, вторая - ключи, 
+          | обработка происходит построчно для каждой записи материализованного пути.
+        p  
+          | Процесс можно представить как индексацию по вторичному ключу, а в
+          | значениях у нас оказывается полный путь по всему дереву до выбранного элемента.
+          em  Элементу не обязательно являться листом, он может быть и ветвью.
+
+        pre.prettyprint comments_finalizer = (key, values, emit) -> 
+          |   _.each values, (item) -> 
+          |     emit Math.ceil(key), item
+          |     null
+          |   null
+
+        p 
+          | Функция финализации, по сути поместь 
+          code Reduce
+          |   и 
+          code finalize
+          |   в 
+          strong MongoDB
+          | .
+        p
+          | Важно понимать, что она получает ключ (одиночное значение) и
+          | значения (массив из одного или нескольких элементов),
+          | а эмитировать должна каждое значение отдельно.
+          | Это может пригодиться при редукции данных.
+        p
+          | В данном случае мы округляем рейтинги каждой записи, для удобства,
+          | фактически работая над ключем, а не значением.
+
+        pre.prettyprint comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer
+        p 
+          | Собственно, это один из двух основных методов объекта 
+          strong TinyData
+          | , который материализует путь (если он отсутствует в кеше),
+          | затем делает выборку и далее финализирует данные.
+
+        span.label.label-info Кое-что важное!
+        div.well
+          p
+            strong #seekOutVerso()
+            |  означает, что интерпретация результатов 
+            strong RegExp
+            | -правила будет происходить в 
+            em обратном 
+            |  порядке:
+            | первая сохраняющая скобка сохраняется как значения, вторая как ключи.
+
+          p
+            strong #seekOut()
+            |  означает, что интерпретация результатов 
+            strong RegExp
+            | -правила будет происходить в 
+            em прямом
+            |  порядке:
+            | первая сохраняющая скобка сохраняется как ключи, вторая - как значения. 
+
+          p 
+            | Кроме того можно задать произвольные номера скобок для ключа и значения
+          p
+            code seekOutVerso rule, finalizer, key : 4, value : 3
+
+        p 
+          | Все, результатом данного метода является объект с данными вида 
+          code оценка -> список комментариев
+          | . 
+
+        p 
+          | Основная сложность в использовании - составление корректного
+          | регулярного выражения.
+
+
+    div.span8
+      section#flat_tree
+        h4 Формирование "плоского" дерева объектов
+
+      div.span10 
+        p
+          a(href="#rating", data-toggle="collapse", data-target=".rating_data" ) исходные данные (см. пример выше)...
+
+        p
+          a(href="#flat_tree", data-toggle="collapse", data-target=".flat_tree_code" ) листинг кода...
+        div.flat_tree_code.collapse
+          pre.prettyprint
+
+        p
+          a(href="#flat_tree", data-toggle="collapse", data-target=".flat_tree_result" ) результат...
+        div.flat_tree_result.collapse
+          pre.prettyprint
+
+
+      div.span9
+        h5 Построчный разбор кода в нотации Coffeescript
+        pre.prettyprint TinyData = require 'tinydata'
+          | object_td = new TinyData in_data, debug : yes
+
+        p
+          | Эти строки описаны в 
+          a(href='#rating') примере выше
+          | .
+
+        pre.prettyprint post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
+
+        p
+          strong RegExp
+          | -правило для отбора необходимых нам данных.
+          | В данном случае вторая скобка внутри первой, соответственно результат
+          | превращается в массив материализованных путей внутри объекта.
+        
+        pre.prettyprint post_with_comments = object_td.seekOutVerso post_with_comments_rule
+        p
+          | По факту мы выбираем все записи у которых 
+          strong есть
+          |  комментарии.
+
+        pre.prettyprint post_without_comments = object_td.seekOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'
+        p
+          | В данном случае правило представлено строкой, а не объектом регулярного выражения.
+        p
+          | Преобразование 
+          strong TinyData
+          |  сделает сам.
+
+        p
+          | Само правило выберет все записи, у которых 
+          strong нет
+          |  комментариев.
+
+        span.label.label-info Кое-что важное!
+        div.well
+          p
+            | Пустой 
+            strong объект 
+            |  при стрингификации исходных данных будет отображаться как 
+            code __EMPTY__|HASH|
+            |  (термин 
+            em объект
+            |  в JS несколько перегружен, посему он называется hash, как в  
+            strong perl
+            |  )
+          p
+            | Пустой 
+            strong массив
+            |  будет отображаться как 
+            code __EMPTY__|ARRAY|
+            | .
+
+        pre.prettyprint all_posts = _.assign post_with_comments, post_without_comments
+        p
+          | Объединяем все в единый объект, в результате имеем плоское дерево
+
+        p 
+          | Практический смысл этого примера можно посмотреть в разделе 
+          a(href='demo.html') Демо
+          | .
+
+    div.span8
+      section#weight_rating
+        h4 Рейтинг с весовыми коэффициентами (подготовка данных)
+        span.label.label-warning Пояснение
+        div.well
+          p
+            | Этот пример нуждается в пояснении интерпретации данных.
+          p
+            | Положим, что для поста у нас есть ретинг от анонимусов, который суммируется в самом посте
+            | и есть оценка поста зарегистрированными пользователями, которые оставили комментарий.
+            | Проявим больше доверия второй группе, например 80%, а на первых оставим весовой 
+            | коэффициент в общей оценке всего 20%.
+          p
+            | Для случая, когда есть только оценки анонимусов, они будут иметь 50% веса,
+            | а оставшиеся 50% будет составлять виртуальная базовая 3-ка из 5 возможных (будем считать, что авторы пишут средне)
+
+          p 
+            |  PS. Здесь будет показана только подготовка данных, использование - в разделе 
+            a(href='demo.html') Демо
+            | . 
+
+      div.span10 
+        p
+          a(href="#rating", data-toggle="collapse", data-target=".rating_data" ) исходные данные (см. пример выше)...
+
+        p
+          a(href="#weight_rating", data-toggle="collapse", data-target=".weight_rating_code" ) листинг кода...
+        div.weight_rating_code.collapse
+          pre.prettyprint
+
+        p
+          a(href="#weight_rating", data-toggle="collapse", data-target=".weight_rating_result" ) результат...
+        div.weight_rating_result.collapse
+          pre.prettyprint
+
+      div.span9
+        h5 Построчный разбор кода в нотации Coffeescript
+        pre.prettyprint TinyData = require 'tinydata'
+          | object_td = new TinyData in_data, debug : yes
+
+        p
+          | Эти строки описаны в 
+          a(href='#rating') примере выше
+          | .
+
+        pre.prettyprint make_rating_values_rule = (regexp_transform_fn, path_delimiter) ->
+          |  transformed_verifyed_rating_regexp = \
+          |     regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+          |  anonymous_rating_rule = \
+          |     "^(\\d+)\#{path_delimiter}rating\#{path_delimiter}([^\#{path_delimiter}]+)"
+          |  (stringifyed_item, emit) ->
+          |    if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+          |      emit mached_data[1], parseFloat mached_data[2]
+          |    else if mached_data = stringifyed_item.match anonymous_rating_rule
+          |      emit "_\#{mached_data[1]}", parseFloat mached_data[2]
+          |    null
+
+        p
+          | Тут у нас довольно большой блок кода
+          | (просто для демонстрации, на самом деле можно было сделать оба поиска, используя 
+          strong #seekOut()
+          |   ),
+          | однако построчное его разбиение
+          | бессмысленно, будем описывать целиком
+
+        span.label.label-info Кое-что важное!
+        div.well
+          p
+            | В качестве третьего варианта правила обработки стрингификации 
+            strong TinyData 
+            |  может принимать функцию, в этом случае с каждой строкой можно делать 
+            | что угодно.
+          p
+            | Минусом свободы является то, что нужно погружаться в некоторые детали
+            | реализации механизма стрингификации.
+
+          p
+            | На самом деле для разделения полей используется не точка, а другой символ
+            | и чтобы наше регулярное выражение работало как надо - его следует преобразовать
+            | вручную (получив у объекта 
+            strong TinyData
+            |  значение разделителя методом 
+            code getPathDelimiter 'internal'
+            |  ), или помощником.
+
+        pre.prettyprint rating_values_rule = make_rating_values_rule \
+          |   object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'
+        p 
+          | В данном случае первым преобразованием занимается помощник,
+          | а для второго выражения мы вручную вставляем разделители
+          | после чего правило в 
+          | виде функции приходит к нам обратно. Замыкание здесь используется по соображениям скорости обработки,
+          | ведь функция правила просмотра 
+          strong будет вызываться на каждую строку
+          |  материализованного пути. Держите это в уме.
+
+        pre.prettyprint rating_aggregator = (key, values, emit) -> 
+          |   sum_of_all_rating = _.reduce values, (memo, num) -> memo + num
+          |   emit key, sum_of_all_rating / values.length
+          |   null
+
+        p
+          | Кроме того поручим объекту заодно и высчитать среднее арифметическое
+          | от наших рейтингов из комментариев.
+
+        pre.prettyprint posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator
+
+        p
+          | Поручаем объекту посчитать все, используя правила обработки и финализации.
+
+        p 
+          | Дальнейший расчет и обработка данных использованы в разделе 
+          a(href='demo.html') Демо
+          | .

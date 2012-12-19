@@ -8,18 +8,19 @@ Its so wrong, but its OK for test
 
 
 (function() {
-  var TinyData, lib_path, _, _ref;
+  var TinyData, lib_path, _, _ref,
+    __hasProp = {}.hasOwnProperty;
 
-  _ = (_ref = this._) != null ? _ref : require('underscore');
+  _ = (_ref = this._) != null ? _ref : require('lodash');
 
   lib_path = (typeof GLOBAL !== "undefined" && GLOBAL !== null ? GLOBAL.lib_path : void 0) || '';
 
   TinyData = require("" + lib_path + "tinydata");
 
   describe('TinyData: stress test', function() {
-    var huge_array, object_td, user_like_rpath, users;
-    object_td = huge_array = null;
-    user_like_rpath = '^(.+\\.)like\\.\\d+\\.([^.]+)$';
+    var huge_array, object_td, reference_func, stringify_filter, user_like_rpath, users;
+    object_td = huge_array = stringify_filter = null;
+    user_like_rpath = '^(\\d+\\.)like\\.\\d+\\.([^.]+)$';
     users = [
       {
         name: 'Вася',
@@ -43,10 +44,30 @@ Its so wrong, but its OK for test
         like: ['пицца', 'теннис', 'этника']
       }
     ];
-    beforeEach(function() {
-      return object_td = new TinyData();
-    });
-    return describe('#getOriginFor()', function() {
+    reference_func = function(in_obj) {
+      var element, item, item_idx, like_dict, name, value, _i, _j, _len, _len1, _ref1;
+      console.time('->  reference: ');
+      like_dict = {};
+      for (item_idx = _i = 0, _len = in_obj.length; _i < _len; item_idx = ++_i) {
+        item = in_obj[item_idx];
+        for (name in item) {
+          if (!__hasProp.call(item, name)) continue;
+          value = item[name];
+          if (name === 'like') {
+            for (_j = 0, _len1 = value.length; _j < _len1; _j++) {
+              element = value[_j];
+              if ((_ref1 = like_dict[element]) == null) {
+                like_dict[element] = [];
+              }
+              like_dict[element].push("" + item_idx);
+            }
+          }
+        }
+      }
+      console.timeEnd('->  reference: ');
+      return like_dict;
+    };
+    describe('reference speed for clean js iterators', function() {
       beforeEach(function() {
         return huge_array = _.union([], users);
       });
@@ -55,30 +76,165 @@ Its so wrong, but its OK for test
         _(12).times(function() {
           return huge_array = huge_array.concat(huge_array);
         });
-        object_td.setOriginalObject(huge_array).setRpath(user_like_rpath);
-        huge_result = object_td.getOriginFor('soul');
+        huge_result = reference_func(huge_array);
         _.size(huge_array).should.be.a.equal(20480);
-        return _.size(huge_result).should.be.a.equal(8192);
+        return _.size(huge_result['soul']).should.be.a.equal(8192);
       });
       it('should work on huge data (40960 objects in set) ', function() {
         var huge_result;
         _(13).times(function() {
           return huge_array = huge_array.concat(huge_array);
         });
-        object_td.setOriginalObject(huge_array).setRpath(user_like_rpath);
-        huge_result = object_td.getOriginFor('soul');
+        huge_result = reference_func(huge_array);
         _.size(huge_array).should.be.a.equal(40960);
-        return _.size(huge_result).should.be.a.equal(16384);
+        return _.size(huge_result['soul']).should.be.a.equal(16384);
       });
       return it('should work on huge data (81920 objects in set) ', function() {
         var huge_result;
         _(14).times(function() {
           return huge_array = huge_array.concat(huge_array);
         });
-        object_td.setOriginalObject(huge_array).setRpath(user_like_rpath);
-        huge_result = object_td.getOriginFor('soul');
+        huge_result = reference_func(huge_array);
         _.size(huge_array).should.be.a.equal(81920);
-        return _.size(huge_result).should.be.a.equal(32768);
+        return _.size(huge_result['soul']).should.be.a.equal(32768);
+      });
+    });
+    describe('#seekOutVerso() without optimization', function() {
+      beforeEach(function() {
+        return huge_array = _.union([], users);
+      });
+      it('should work on huge data (20480 objects in set) ', function() {
+        var huge_result;
+        _(12).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(20480);
+        return _.size(huge_result['soul']).should.be.a.equal(8192);
+      });
+      it('should work on huge data (40960 objects in set) ', function() {
+        var huge_result;
+        _(13).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(40960);
+        return _.size(huge_result['soul']).should.be.a.equal(16384);
+      });
+      return it('should work on huge data (81920 objects in set) ', function() {
+        var huge_result;
+        _(14).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(81920);
+        return _.size(huge_result['soul']).should.be.a.equal(32768);
+      });
+    });
+    describe('#seekOutVerso() with rakeStringify pre-filter (with strict settings)', function() {
+      beforeEach(function() {
+        huge_array = _.union([], users);
+        return stringify_filter = {
+          origin_pattern: /^\d+\.$/,
+          element_name: 'like',
+          apply_on_depth: 1
+        };
+      });
+      it('should work on huge data (20480 objects in set) ', function() {
+        var huge_result;
+        _(12).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        object_td.rakeStringify(stringify_filter);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(20480);
+        return _.size(huge_result['soul']).should.be.a.equal(8192);
+      });
+      it('should work on huge data (40960 objects in set) ', function() {
+        var huge_result;
+        _(13).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        object_td.rakeStringify(stringify_filter);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(40960);
+        return _.size(huge_result['soul']).should.be.a.equal(16384);
+      });
+      return it('should work on huge data (81920 objects in set) ', function() {
+        var huge_result;
+        _(14).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        object_td.rakeStringify(stringify_filter);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(81920);
+        return _.size(huge_result['soul']).should.be.a.equal(32768);
+      });
+    });
+    return describe('#seekOutVerso() with rakeStringify pre-filter (with moderate settings)', function() {
+      beforeEach(function() {
+        huge_array = _.union([], users);
+        return stringify_filter = {
+          element_name: 'like',
+          apply_on_depth: 1
+        };
+      });
+      it('should work on huge data (20480 objects in set) ', function() {
+        var huge_result;
+        _(12).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        object_td.rakeStringify(stringify_filter);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(20480);
+        return _.size(huge_result['soul']).should.be.a.equal(8192);
+      });
+      it('should work on huge data (40960 objects in set) ', function() {
+        var huge_result;
+        _(13).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        object_td.rakeStringify(stringify_filter);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(40960);
+        return _.size(huge_result['soul']).should.be.a.equal(16384);
+      });
+      return it('should work on huge data (81920 objects in set) ', function() {
+        var huge_result;
+        _(14).times(function() {
+          return huge_array = huge_array.concat(huge_array);
+        });
+        object_td = new TinyData(huge_array, {
+          timing: true
+        });
+        object_td.rakeStringify(stringify_filter);
+        huge_result = object_td.seekOutVerso(user_like_rpath);
+        _.size(huge_array).should.be.a.equal(81920);
+        return _.size(huge_result['soul']).should.be.a.equal(32768);
       });
     });
   });

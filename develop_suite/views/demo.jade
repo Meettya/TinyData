@@ -1,0 +1,151 @@
+extends includes/layout
+
+block content
+  link(rel='stylesheet', href='css/stars.css')
+
+
+  // only head.js needed at first
+  script(src='vendor/head.load-0.99.min.js')
+
+  //head.js loader
+  :coffeescript
+    head.js "vendor/lodash-1.0.0-rc.1.min.js",
+    { tinydata : "js/tinydata.js" }
+
+  :coffeescript
+
+    head.ready "tinydata", ->
+      $ -> 
+        ###
+        This is second example code
+        ###
+
+        post_template = _.template """
+          <div class="stars empty">
+            <div class="stars filled_<%= average_rating %>"></div>
+          </div>
+          <strong>Title:</strong>  <span><%= post_data.title %></span></br>
+          <strong>Author:</strong>  <span><%= post_data.author.name %></span></br>
+          <strong>Text:</strong>  <span><%= post_data.text %></span></br>
+          <span class="btn btn-primary btn-small <%= comment_num ? 'active': 'disabled' %>" data-toggle="collapse" data-target="#comments_to_<%= post_idx %>">Comments (<%= comment_num %>):<span></br>
+          """
+  
+        comment_template = _.template """
+          <div class="span5 offset<%= comment_shift %> well">
+          <strong>Author:</strong>  <span><%= comment_data.author.name %></span></br>
+          <strong>Text:</strong>  <span><%= comment_data.text %></span></br>
+          </div>
+          """
+
+        calculate_rating = (object_td) ->
+
+          make_rating_values_rule = (regexp_transform_fn, path_delimiter) ->
+            transformed_verifyed_rating_regexp = regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+            anonymous_rating_rule = "^(\\d+)#{path_delimiter}rating#{path_delimiter}([^#{path_delimiter}]+)"
+            (stringifyed_item, emit) ->
+              if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+                emit mached_data[1], parseFloat mached_data[2]
+              else if mached_data = stringifyed_item.match anonymous_rating_rule
+                emit "_#{mached_data[1]}", parseFloat mached_data[2]
+              null
+
+          rating_aggregator = (key, values, emit) -> 
+            sum_of_all_rating = _.reduce values, (memo, num) -> memo + num
+            emit key, sum_of_all_rating / values.length 
+            null
+
+          rating_values_rule = make_rating_values_rule object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'
+          posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator
+
+          rating_stub = 3
+
+          for fake_key in _.keys posts_with_raitings when '_' is fake_key.charAt 0
+            real_key = fake_key.slice 1
+            verifyed_rating = posts_with_raitings[real_key]
+            if verifyed_rating
+              posts_with_raitings[real_key] = Math.ceil( ( posts_with_raitings[fake_key]*0.2 + posts_with_raitings[real_key]*0.8 ) * 2 )
+            else
+              posts_with_raitings[real_key] = Math.ceil( ( posts_with_raitings[fake_key]*0.5 + rating_stub*0.5 ) * 2 )
+
+            delete posts_with_raitings[fake_key]
+
+          posts_with_raitings
+
+        show_blog_example = (in_data) ->
+
+          TinyData = require 'tinydata'
+          object_td = new TinyData in_data, debug : yes
+          post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
+          processed_data = object_td.seekOutVerso post_with_comments_rule
+
+          ratings_for_post = calculate_rating object_td
+
+          main_container = $('<div>')
+          _.each in_data, (post_prop, post_idx) ->
+
+            post_object = 
+              post_idx : post_idx
+              post_data : in_data[post_idx]
+              comment_num : processed_data[post_idx]?.length
+              average_rating : ratings_for_post[post_idx]
+
+            # to setup all undefined values at one place
+            _.defaults post_object, 
+              comment_num : 0
+
+            post = $("<div class='span8 well'>")
+              .html(post_template post_object)
+              .appendTo main_container
+        
+            comment_container = $("<div class='span10 collapse' id='comments_to_#{post_idx}'>")
+              .appendTo post
+
+            _.each processed_data[post_idx], (comment_path) ->
+
+              comment_shift = (comment_path.split('.').length - 3)/2
+
+              comment_object = 
+                comment_data : object_td.getDataByPath comment_path
+                comment_shift : comment_shift
+
+              comment =  $("<div class='row'>")
+                .html(comment_template comment_object)
+                .appendTo comment_container
+
+          main_container.appendTo $('.blog_examlpe')
+
+        $.getJSON "example/blog_example_data.json", show_blog_example
+
+
+  div.container
+    h1 TinyData Live Demo
+
+    div.span8
+      span.label.label-important Внимание!
+      div.well
+        p Смертельный номер, работа без каната!
+        em Ну ну дизайнер я, чувство прекрасного меня ненавидит :)
+        p
+          em Помогите с версткой, а?
+
+    div.span8
+      p
+        | Итого для формирования страницы а-ля блог, 
+        | имея на входе только сырые данные а-ля выдача MongoDB,
+        | мы использовали:
+        ul.unstyled
+          li 1шт. RegExp (довольно простой и понятный)
+          li 2шт. _.each нерекурсивной природы
+          li 2шт. _.template
+        | 
+        | В сумме 40 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
+        | без гольфизма (в нотации Coffeescript) для "блога".
+      p
+        | Плюс 30 строк для звездочек рейтинга, не особо утруждая себя в сокращении кода.
+        | Высчитаного, кстати, на лету и по довольно натуральному алгоритму (который дает простор для кастомизации на клиенте).
+        | На него так же пойдет пара RegExp-ов, и немного итераторов.
+
+
+    div.blog_examlpe
+
+

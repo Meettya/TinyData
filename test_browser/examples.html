@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>TinyData project</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"><style>
+    body { padding-top: 60px; }
+    </style>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css">
+    <!--link(rel='stylesheet', href='/css/style.css')-->
+    <script src="vendor/jquery-1.8.3.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/prettify.css">
+    <script src="vendor/prettify.js"></script>
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="index.html" class="brand">TinyData</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="index.html">Home</a></li>
+              <li> <a href="test.html">Test suite</a></li>
+              <li><a href="examples.html">Examples</a></li>
+              <li><a href="demo.html">Demo</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- add active toggler to navbar--><script type="text/javascript">
+(function() {
+
+  $(function() {
+    var page_path;
+    page_path = /([^/]+)$/.exec(this.location.pathname);
+    $(".nav li a[href='" + page_path[1] + "']").parents('li').addClass('active');
+    return null;
+  });
+
+}).call(this);
+</script>
+    <!-- only head.js needed at first-->
+    <script src="vendor/head.load-0.99.min.js"></script>
+    <!--head.js loader--><script type="text/javascript">
+(function() {
+
+  head.js("vendor/lodash-1.0.0-rc.1.min.js", {
+    tinydata: "js/tinydata.js"
+  });
+
+}).call(this);
+</script><script type="text/javascript">
+(function() {
+
+  $(function() {
+    return prettyPrint();
+  });
+
+  head.ready("tinydata", function() {
+    return $(function() {
+      /*
+          This is first example code
+      */
+
+      var code_example_1, code_example_2, code_example_3, show_data_1, show_data_2, show_data_3;
+      show_data_1 = function(in_data, result) {
+        $(".rating_result").children().text(JSON.stringify(result, null, 2));
+        $(".rating_data").children().text(JSON.stringify(in_data, null, 2));
+        prettyPrint();
+        return null;
+      };
+      code_example_1 = function(in_data) {
+        var TinyData, comments_finalizer, comments_ratings, comments_ratings_rule, object_td;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/;
+        comments_finalizer = function(key, values, emit) {
+          _.each(values, function(item) {
+            emit(Math.ceil(key), item);
+            return null;
+          });
+          return null;
+        };
+        comments_ratings = object_td.seekOutVerso(comments_ratings_rule, comments_finalizer);
+        show_data_1(in_data, comments_ratings);
+        return null;
+      };
+      $(".rating_code").children().text(code_example_1.toString());
+      $.getJSON("example/blog_example_data.json", code_example_1);
+      /*
+          This is second example code
+      */
+
+      show_data_2 = function(result) {
+        $(".flat_tree_result").children().text(JSON.stringify(result, null, 2));
+        prettyPrint();
+        return null;
+      };
+      code_example_2 = function(in_data) {
+        var TinyData, all_posts, object_td, post_with_comments, post_with_comments_rule, post_without_comments;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
+        post_with_comments = object_td.seekOutVerso(post_with_comments_rule);
+        post_without_comments = object_td.seekOutVerso('^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|');
+        all_posts = _.assign(post_with_comments, post_without_comments);
+        show_data_2(all_posts);
+        return null;
+      };
+      $(".flat_tree_code").children().text(code_example_2.toString());
+      $.getJSON("example/blog_example_data.json", code_example_2);
+      /*
+          This is third code example
+      */
+
+      show_data_3 = function(result) {
+        $(".weight_rating_result").children().text(JSON.stringify(result, null, 2));
+        prettyPrint();
+        return null;
+      };
+      code_example_3 = function(in_data) {
+        var TinyData, make_rating_values_rule, object_td, posts_with_raitings, rating_aggregator, rating_values_rule;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        make_rating_values_rule = function(regexp_transform_fn, path_delimiter) {
+          var anonymous_rating_rule, transformed_verifyed_rating_regexp;
+          transformed_verifyed_rating_regexp = regexp_transform_fn(/^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/);
+          anonymous_rating_rule = "^(\\d+)" + path_delimiter + "rating" + path_delimiter + "([^" + path_delimiter + "]+)";
+          return function(stringifyed_item, emit) {
+            var mached_data;
+            if (mached_data = stringifyed_item.match(transformed_verifyed_rating_regexp)) {
+              emit(mached_data[1], parseFloat(mached_data[2]));
+            } else if (mached_data = stringifyed_item.match(anonymous_rating_rule)) {
+              emit("_" + mached_data[1], parseFloat(mached_data[2]));
+            }
+            return null;
+          };
+        };
+        rating_aggregator = function(key, values, emit) {
+          var sum_of_all_rating;
+          sum_of_all_rating = _.reduce(values, function(memo, num) {
+            return memo + num;
+          });
+          emit(key, sum_of_all_rating / values.length);
+          return null;
+        };
+        rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp, object_td.getPathDelimiter('internal'));
+        posts_with_raitings = object_td.seekOutVerso(rating_values_rule, rating_aggregator);
+        show_data_3(posts_with_raitings);
+        return null;
+      };
+      $(".weight_rating_code").children().text(code_example_3.toString());
+      return $.getJSON("example/blog_example_data.json", code_example_3);
+    });
+  });
+
+}).call(this);
+</script>
+    <div class="container">
+      <h1>TinyData Examples</h1>
+      <div class="span8"><span class="label label-important">Внимание!</span>
+        <div class="well">
+          <p>В коде примеров используются функции из модуля <a href="http://lodash.com/" target="_blank">lodash</a> для упрощения рутинных операций, построчная разборка кода приводится в нотации<strong> Coffeescript</strong> по причине более удобного синтаксиса<em> (в дальнейшем, вероятно, будет создан отдельный раздел для JS-нотации)</em>.</p>
+          <p>
+             
+            Однако, в листингах выводится JS код, т.к. это тот самый код,
+            который исполняется на данной странице. Да, вы считаете результаты сами.
+          </p>
+        </div>
+      </div>
+      <div class="span8">
+        <section id="rating">
+          <h4>Получение рейтинга всех комментариев</h4>
+        </section>
+        <div class="span10"> 
+          <p><a href="#rating" data-toggle="collapse" data-target=".rating_data">исходные данные (много)...</a></p>
+          <div class="rating_data collapse">
+            <pre class="prettyprint pre-scrollable"></pre>
+          </div>
+          <p><a href="#rating" data-toggle="collapse" data-target=".rating_code">листинг кода...</a></p>
+          <div class="rating_code collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+          <p><a href="#rating" data-toggle="collapse" data-target=".rating_result">результат...</a></p>
+          <div class="rating_result collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+        </div>
+        <div class="span9">
+          <h5>Построчный разбор кода в нотации Coffeescript</h5>
+          <pre class="prettyprint">TinyData = require 'tinydata'</pre>
+          <p>
+            TinyData на данный момент собирается для браузера как псевдо-CommonJS модуль
+            , поэтому после загрузки его кода запрашиваем класс<em> (возможно данное поведение будет изменено)</em>.
+          </p>
+          <pre class="prettyprint">object_td = new TinyData in_data, debug : yes</pre>
+          <p>Создаем объект, на входе <strong>JSON</strong> данные - первый аргумент, а вторым следуют опциональные
+            настройки<em> (результат включенного режима отладки можно посмотреть в консоли)</em>.
+          </p>
+          <pre class="prettyprint">comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/</pre>
+          <p><strong>RegExp</strong>-правило для отбора необходимых нам данных.
+            Первая сохраняющая скобка даст нам значения, вторая - ключи, 
+            обработка происходит построчно для каждой записи материализованного пути.
+          </p>
+          <p>
+             
+            Процесс можно представить как индексацию по вторичному ключу, а в
+            значениях у нас оказывается полный путь по всему дереву до выбранного элемента.<em> Элементу не обязательно являться листом, он может быть и ветвью.</em>
+          </p>
+          <pre class="prettyprint">comments_finalizer = (key, values, emit) -&gt; 
+  _.each values, (item) -&gt; 
+    emit Math.ceil(key), item
+    null
+  null</pre>
+          <p>
+             
+            Функция финализации, по сути поместь <code>Reduce</code>  и <code>finalize</code>  в <strong>MongoDB</strong>.
+          </p>
+          <p>
+            Важно понимать, что она получает ключ (одиночное значение) и
+            значения (массив из одного или нескольких элементов),
+            а эмитировать должна каждое значение отдельно.
+            Это может пригодиться при редукции данных.
+          </p>
+          <p>
+            В данном случае мы округляем рейтинги каждой записи, для удобства,
+            фактически работая над ключем, а не значением.
+          </p>
+          <pre class="prettyprint">comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer</pre>
+          <p>
+             
+            Собственно, это один из двух основных методов объекта <strong>TinyData</strong>, который материализует путь (если он отсутствует в кеше),
+            затем делает выборку и далее финализирует данные.
+          </p><span class="label label-info">Кое-что важное!</span>
+          <div class="well">
+            <p><strong>#seekOutVerso()</strong> означает, что интерпретация результатов <strong>RegExp</strong>-правила будет происходить в <em>обратном </em> порядке:
+              первая сохраняющая скобка сохраняется как значения, вторая как ключи.
+            </p>
+            <p><strong>#seekOut()</strong> означает, что интерпретация результатов <strong>RegExp</strong>-правила будет происходить в <em>прямом</em> порядке:
+              первая сохраняющая скобка сохраняется как ключи, вторая - как значения. 
+            </p>
+            <p>
+               
+              Кроме того можно задать произвольные номера скобок для ключа и значения
+            </p>
+            <p><code>seekOutVerso rule, finalizer, key : 4, value : 3</code></p>
+          </div>
+          <p>
+             
+            Все, результатом данного метода является объект с данными вида <code>оценка -> список комментариев</code>. 
+          </p>
+          <p>
+             
+            Основная сложность в использовании - составление корректного
+            регулярного выражения.
+          </p>
+        </div>
+      </div>
+      <div class="span8">
+        <section id="flat_tree">
+          <h4>Формирование "плоского" дерева объектов</h4>
+        </section>
+        <div class="span10"> 
+          <p><a href="#rating" data-toggle="collapse" data-target=".rating_data">исходные данные (см. пример выше)...</a></p>
+          <p><a href="#flat_tree" data-toggle="collapse" data-target=".flat_tree_code">листинг кода...</a></p>
+          <div class="flat_tree_code collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+          <p><a href="#flat_tree" data-toggle="collapse" data-target=".flat_tree_result">результат...</a></p>
+          <div class="flat_tree_result collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+        </div>
+        <div class="span9">
+          <h5>Построчный разбор кода в нотации Coffeescript</h5>
+          <pre class="prettyprint">TinyData = require 'tinydata'
+object_td = new TinyData in_data, debug : yes</pre>
+          <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
+          <pre class="prettyprint">post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/</pre>
+          <p><strong>RegExp</strong>-правило для отбора необходимых нам данных.
+            В данном случае вторая скобка внутри первой, соответственно результат
+            превращается в массив материализованных путей внутри объекта.
+          </p>
+          <pre class="prettyprint">post_with_comments = object_td.seekOutVerso post_with_comments_rule</pre>
+          <p>По факту мы выбираем все записи у которых <strong>есть</strong> комментарии.</p>
+          <pre class="prettyprint">post_without_comments = object_td.seekOutVerso '^((\\d+)\\.comments\\.)__EMPTY__\\|ARRAY\\|'</pre>
+          <p>В данном случае правило представлено строкой, а не объектом регулярного выражения.</p>
+          <p>Преобразование <strong>TinyData</strong> сделает сам.</p>
+          <p>Само правило выберет все записи, у которых <strong>нет</strong> комментариев.</p><span class="label label-info">Кое-что важное!</span>
+          <div class="well">
+            <p>Пустой <strong>объект </strong> при стрингификации исходных данных будет отображаться как <code>__EMPTY__|HASH|</code> (термин <em>объект</em> в JS несколько перегружен, посему он называется hash, как в  <strong>perl</strong> )</p>
+            <p>Пустой <strong>массив</strong> будет отображаться как <code>__EMPTY__|ARRAY|</code>.</p>
+          </div>
+          <pre class="prettyprint">all_posts = _.assign post_with_comments, post_without_comments</pre>
+          <p>Объединяем все в единый объект, в результате имеем плоское дерево</p>
+          <p>
+             
+            Практический смысл этого примера можно посмотреть в разделе <a href="demo.html">Демо</a>.
+          </p>
+        </div>
+      </div>
+      <div class="span8">
+        <section id="weight_rating">
+          <h4>Рейтинг с весовыми коэффициентами (подготовка данных)</h4><span class="label label-warning">Пояснение</span>
+          <div class="well">
+            <p>Этот пример нуждается в пояснении интерпретации данных.</p>
+            <p>
+              Положим, что для поста у нас есть ретинг от анонимусов, который суммируется в самом посте
+              и есть оценка поста зарегистрированными пользователями, которые оставили комментарий.
+              Проявим больше доверия второй группе, например 80%, а на первых оставим весовой 
+              коэффициент в общей оценке всего 20%.
+            </p>
+            <p>
+              Для случая, когда есть только оценки анонимусов, они будут иметь 50% веса,
+              а оставшиеся 50% будет составлять виртуальная базовая 3-ка из 5 возможных (будем считать, что авторы пишут средне)
+            </p>
+            <p>
+               
+               PS. Здесь будет показана только подготовка данных, использование - в разделе <a href="demo.html">Демо</a>. 
+            </p>
+          </div>
+        </section>
+        <div class="span10"> 
+          <p><a href="#rating" data-toggle="collapse" data-target=".rating_data">исходные данные (см. пример выше)...</a></p>
+          <p><a href="#weight_rating" data-toggle="collapse" data-target=".weight_rating_code">листинг кода...</a></p>
+          <div class="weight_rating_code collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+          <p><a href="#weight_rating" data-toggle="collapse" data-target=".weight_rating_result">результат...</a></p>
+          <div class="weight_rating_result collapse">
+            <pre class="prettyprint"></pre>
+          </div>
+        </div>
+        <div class="span9">
+          <h5>Построчный разбор кода в нотации Coffeescript</h5>
+          <pre class="prettyprint">TinyData = require 'tinydata'
+object_td = new TinyData in_data, debug : yes</pre>
+          <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
+          <pre class="prettyprint">make_rating_values_rule = (regexp_transform_fn, path_delimiter) -&gt;
+ transformed_verifyed_rating_regexp = \
+    regexp_transform_fn /^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/
+ anonymous_rating_rule = \
+    &quot;^(\\d+)#{path_delimiter}rating#{path_delimiter}([^#{path_delimiter}]+)&quot;
+ (stringifyed_item, emit) -&gt;
+   if mached_data = stringifyed_item.match transformed_verifyed_rating_regexp
+     emit mached_data[1], parseFloat mached_data[2]
+   else if mached_data = stringifyed_item.match anonymous_rating_rule
+     emit &quot;_#{mached_data[1]}&quot;, parseFloat mached_data[2]
+   null</pre>
+          <p>
+            Тут у нас довольно большой блок кода
+            (просто для демонстрации, на самом деле можно было сделать оба поиска, используя <strong>#seekOut()</strong>  ),
+            однако построчное его разбиение
+            бессмысленно, будем описывать целиком
+          </p><span class="label label-info">Кое-что важное!</span>
+          <div class="well">
+            <p>В качестве третьего варианта правила обработки стрингификации <strong>TinyData </strong> может принимать функцию, в этом случае с каждой строкой можно делать 
+              что угодно.
+            </p>
+            <p>
+              Минусом свободы является то, что нужно погружаться в некоторые детали
+              реализации механизма стрингификации.
+            </p>
+            <p>
+              На самом деле для разделения полей используется не точка, а другой символ
+              и чтобы наше регулярное выражение работало как надо - его следует преобразовать
+              вручную (получив у объекта <strong>TinyData</strong> значение разделителя методом <code>getPathDelimiter 'internal'</code> ), или помощником.
+            </p>
+          </div>
+          <pre class="prettyprint">rating_values_rule = make_rating_values_rule \
+  object_td.doTransormRegExp, object_td.getPathDelimiter 'internal'</pre>
+          <p>
+             
+            В данном случае первым преобразованием занимается помощник,
+            а для второго выражения мы вручную вставляем разделители
+            после чего правило в 
+            виде функции приходит к нам обратно. Замыкание здесь используется по соображениям скорости обработки,
+            ведь функция правила просмотра <strong>будет вызываться на каждую строку</strong> материализованного пути. Держите это в уме.
+          </p>
+          <pre class="prettyprint">rating_aggregator = (key, values, emit) -&gt; 
+  sum_of_all_rating = _.reduce values, (memo, num) -&gt; memo + num
+  emit key, sum_of_all_rating / values.length
+  null</pre>
+          <p>
+            Кроме того поручим объекту заодно и высчитать среднее арифметическое
+            от наших рейтингов из комментариев.
+          </p>
+          <pre class="prettyprint">posts_with_raitings = object_td.seekOutVerso rating_values_rule, rating_aggregator</pre>
+          <p>Поручаем объекту посчитать все, используя правила обработки и финализации.</p>
+          <p>
+             
+            Дальнейший расчет и обработка данных использованы в разделе <a href="demo.html">Демо</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
