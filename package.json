@@ -1,6 +1,6 @@
 {
   "name": "TinyData",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Tiny data mining engine, with path materialization and naive map-reduce logic",
   "main": "index.js",
   "repository": "",
