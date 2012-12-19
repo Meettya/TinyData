@@ -1,5 +1,5 @@
 {
-  "name": "TinyData",
+  "name": "tiny-data",
   "version": "0.2.8",
   "description": "Tiny data mining engine, with path materialization and naive map-reduce logic",
   "main": "index.js",

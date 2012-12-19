@@ -91,7 +91,10 @@ block content
       p
         strong TinyData
         |  предназначен для работы с неструктурированными данными 
-        | произвольной глубины вложения.
+        | произвольной глубины вложения в любой JS-среде (проверена работа в 
+        strong node.js 
+        | и в современных браузерах)
+
       p
         | Источником таких данных может быть документ-ориентированнная
         | DB, например 
@@ -105,6 +108,20 @@ block content
         a(href="#", data-toggle="collapse", data-target=".example_1" ) упрощенный пример тестового объекта...
       div.example_1.collapse
         pre.prettyprint.pre-scrollable
+
+    div.span8
+      h2 Установка и использование
+      p 
+        | Для использования в браузере необходимо подключить на страницу 
+        a(href="http://lodash.com/", target='_blank') lodash
+        |  и 
+        a(href="https://github.com/Meettya/TinyData/tree/master/lib_browser") TinyData
+        |  в полной или минифицированной форме.
+
+      p
+        | Для использования в Node.js просто используйте команду 
+        code npm install tiny-data
+        | .
 
     div.span8
       h2 Решаемые инструментом задачи
