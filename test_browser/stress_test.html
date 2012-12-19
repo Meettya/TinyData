@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>TinyData stress-test</title>
+    <!-- mocha styles-->
+    <link rel="stylesheet" href="css/mocha.css">
+    <!-- only head.js needed at first-->
+    <script src="vendor/head.load-0.99.min.js"></script>
+    <!--head.js loader--><script type="text/javascript">
+(function() {
+
+  head.js("vendor/jquery-1.8.3.min.js", "vendor/lodash-1.0.0-rc.1.min.js", "vendor/mocha-1.7.3.min.js", {
+    "chai": "vendor/chai-1.4.0.min.js"
+  }, "js/tinydata.js", "test/tinydata-stress_test.js", function() {
+    return mocha.run();
+  });
+
+  head.ready("chai", function() {
+    chai.should();
+    this.expect = chai.expect;
+    mocha.setup('bdd');
+    return null;
+  });
+
+}).call(this);
+</script>
+  </head>
+  <body>
+    <div id="mocha"></div>
+  </body>
+</html>

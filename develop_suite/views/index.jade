@@ -1,0 +1,202 @@
+extends includes/layout
+
+block content
+
+  :coffeescript
+    code_example_1 = [
+      {
+        "title" : "ante sit ipsum porttitor lacus"
+        "rating" : "4.4986496101818085"
+        "author" :
+          "name" : "Caleb, Bell"
+          "_id" : "U9vM7nB6sT2zT4lJ7eP4fQ6f"
+        "text" : "adipiscing pulvinar nec vitae libero nullam placerat vestibulum"
+        "comments" : [
+            {
+              "rating" : "4.4986496101818085"
+              "author" :
+                "name" : "Justin, Patterson"
+                "_id" : "T2dK2hQ8oE4cT1pD5dK7iO5p"
+              "text" : "amet vitae sollicitudin facilisis dolor"
+              "comments" : [
+                  {
+                    "rating" : "2.474840125502485"
+                    "author" :
+                      "name" : "Layla, Bryant"
+                      "_id" : "Y0uN9aY8fE0pT1yY6xT2hD7l"
+                    "text" : "lacus mattis placerat etiam sit magna"
+                    "comments" : [ ]
+                  }
+                ]
+            }
+            {
+              "rating" : "2.474840125502485"
+              "author" :
+                "name" : "Layla, Bryant"
+                "_id" : "Y0uN9aY8fE0pT1yY6xT2hD7l"
+              "text" : "lacus mattis placerat etiam sit magna"
+              "comments" : [ ]
+            }
+          ]
+      }
+      {
+        "title" : "ante sit ipsum porttitor lacus"
+        "rating" : "4.4986496101818085"
+        "author" :
+          "name" : "Caleb, Bell"
+          "_id" : "U9vM7nB6sT2zT4lJ7eP4fQ6f"
+        "text" : "adipiscing pulvinar nec vitae libero nullam placerat vestibulum"
+        "comments" : [ ]
+      }  
+    ]
+
+    code_example_2 =
+      '1': [ 
+        '1.comments.0',
+        '3.comments.1',
+        '3.comments.1.comments.1'
+        ]
+      '2': [ 
+        '0.comments.0.comments.1'
+        '0.comments.0.comments.1.comments.0.comments.0'
+        '1.comments.1.comments.0' 
+        ]
+      '3': [ 
+        '0.comments.0.comments.0',
+        '0.comments.0.comments.2.comments.0',
+        '1.comments.1',
+        '3.comments.0.comments.0' 
+        ]
+      '4': [ 
+        '0.comments.0.comments.2'
+        '3.comments.0' 
+        ]
+      '5': [ 
+        '0.comments.0',
+        '0.comments.0.comments.1.comments.0',
+        '3.comments.1.comments.0' 
+        ]
+
+    $ ->
+      $(".example_1").children().text JSON.stringify code_example_1, null, 2
+      $(".example_2").children().text JSON.stringify code_example_2, null, 2
+
+      prettyPrint()
+      null
+
+  div.container
+    h1 TinyData project
+    
+    div.span8
+      p
+        strong TinyData
+        |  предназначен для работы с неструктурированными данными 
+        | произвольной глубины вложения.
+      p
+        | Источником таких данных может быть документ-ориентированнная
+        | DB, например 
+        strong MongoDB
+        |  или любой иной источник 
+        strong JSON
+        |  данных.
+
+    div.span10 
+      p
+        a(href="#", data-toggle="collapse", data-target=".example_1" ) упрощенный пример тестового объекта...
+      div.example_1.collapse
+        pre.prettyprint.pre-scrollable
+
+    div.span8
+      h2 Решаемые инструментом задачи
+      p
+        strong TinyData 
+        |  упрощает взаимодействие с вложенными данными, помогая осуществлять 
+        | поиск и агрегирование используя относительно простой интерфейс.
+
+    div.span8
+      h2 Технологии
+      p 
+        | Фактически 
+        strong TinyData
+        |  подготавливает (и кеширует) материализованные пути для переданного
+        | объекта, позволяя стоить над ними запросы как с обычными текстовыми данными.
+      
+      p
+        | В самом простом варианте для формирования запроса применяются 
+        | регулярные выражения.
+
+    div.span8
+      p Например так может выглядеть запрос для получения рейтинга каждого комментария:
+      pre.prettyprint  /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/
+
+    div.span10 
+      p
+        a(href="#", data-toggle="collapse", data-target=".example_2" ) фрагмент ответа...
+      div.example_2.collapse
+        pre.prettyprint
+    
+    div.span8
+      p 
+        em 
+          | Посмотреть полный код 
+          a(href="examples.html#rating") агрегирования рейтинга
+          |  можно в разделе 
+          a(href='examples.html')Примеры
+          |  или 
+          a(href='demo.html') Демо
+          | .
+
+    div.span8
+      p 
+        | Кроме того, для поиска можно использовать строку, которая будет преобразована
+        | в регулярное выражение, или даже функцию.
+      p
+        | Функция является самым мощным вариантом, но она требует больших телодвижений
+        | и более глубокого понимания происходящего.
+
+    div.span8
+      p 
+        | Для целей "причесывания" результатов может применяться финализатор -
+        | так же функция, в которой можно работать как над значаниями, так и над ключами.
+
+    div.span8
+      h2 Тюнинг
+      p 
+        | В целях ускорения работы над большими объемами данных реализован 
+        | механизм настройки процесса стрингификации (материализации пути) с фильтрацией, 
+        | кроме того значения в виде длинных строк (более 120 символов) усекаются
+        | до сообщения 
+        code __LONG_TEXT__|355|
+        |  где 355 - длина в символах 
+        em (пользовательская настройка длины будет реализована, но позднее)
+        | .
+
+      p 
+        | Примеры тюнинга и его результативность можно посмотреть в разделе 
+        a(href='test.html')Тесты
+        | , пункт 
+        a(href='stress_test.html', target='_blank') Do stress test on big data
+        | .   
+
+      p 
+        | На данном этапе тюнингом можно добиться примерно 1.5-кратного прироста производительности,
+        | если же этого мало - вероятнее всего следует использовать нативные итераторы.
+
+    div.span8
+      h2 Disclaimer
+      p 
+        | На данный момент проект находится в beta-версии, изменения API маловероятны, 
+        | но возможны.
+
+    div.span8
+      h2 Need help
+      p 
+        | Если вы нашли 
+        strong TinyData
+        |  интересной, но вас что-то смущает - известите меня об этом любым удобным вам образом,
+        | например 
+        a(href='mailto:meettya@gmail.com?subject=TinyData%20feedback') напишите e-mail 
+        |  или 
+        a(href='https://github.com/Meettya/TinyData/issues', target='_blank') откройте issue
+        | . 
+
