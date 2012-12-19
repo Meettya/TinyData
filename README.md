@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/Meettya/TinyData.png)](http://travis-ci.org/Meettya/TinyData)
+[![Build Status](https://travis-ci.org/Meettya/TinyData.png?branch=master)](http://travis-ci.org/Meettya/TinyData)
 
 # TinyData
 
