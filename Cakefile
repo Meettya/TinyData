@@ -32,7 +32,7 @@ commands = require path.join paths.cake_dep, 'command'
 {dev_server} = require path.join paths.cake_dep, 'dev_server'
 
 # for online gh-pages docs
-gh_pages_branch = 'gh-pages'
+gh_pages_branch = 'refs/heads/gh-pages'
 orgin_doc_dir   = 'test_browser'
 
 ###

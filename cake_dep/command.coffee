@@ -106,9 +106,12 @@ update_gh_pages = (cb, document_directory, gh_pages_branch) ->
 
   # internal spawn helper
   git_spawn_helper = (cb, args...) =>
-    console.log args
+    #console.log args
     git_spawn = spawn 'git', args
     git_spawn.stderr.on 'data', (buffer) -> cb "#{buffer}".error
+    git_spawn.on 'exit', (status) ->
+      process.exit(1) if status != 0
+      cb null, 'OK'
     git_spawn.stdout.on 'data', (data) ->
       cb null, "#{data}".trim()
 
@@ -142,7 +145,7 @@ update_gh_pages = (cb, document_directory, gh_pages_branch) ->
       'create_new_commit'
       (cb, results) ->
         git_spawn_helper cb, 'update-ref',
-          "refs/heads/#{gh_pages_branch}", # ITS IMPORTANT TO PREFIX WITH |refs/heads/|
+          gh_pages_branch,
           results.create_new_commit
     ]
 
