@@ -27,7 +27,8 @@
       "uglify-js" : "latest",
       "fs-extra" : "latest",
       "async" : "latest",
-      "lodash" : "latest"
+      "lodash" : "latest",
+      "gift" : "latest"
   },
   "scripts": {
       "test": "cake test_coffee"

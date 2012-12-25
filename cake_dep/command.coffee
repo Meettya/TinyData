@@ -9,6 +9,7 @@ fs            = require 'fs-extra'
 {spawn, exec} = require 'child_process'
 Stitch        = require 'stitch'
 UglifyJS      = require 'uglify-js'
+async         = require 'async'
 
 # add color to console
 module.exports = require './colorizer'
@@ -101,6 +102,59 @@ build_json = (cb, source_dir, result_dir, filter) ->
       console.log " -> json file |#{filename}| build done".info
       cb() if typeof cb is 'function'    
 
+update_gh_pages = (cb, document_directory, gh_pages_branch) ->
+
+  # internal spawn helper
+  git_spawn_helper = (cb, args...) =>
+    console.log args
+    git_spawn = spawn 'git', args
+    git_spawn.stderr.on 'data', (buffer) -> cb "#{buffer}".error
+    git_spawn.stdout.on 'data', (data) ->
+      cb null, "#{data}".trim()
+
+  # start magic engine
+  async.auto
+
+    get_gh_pages_sha : (cb) ->
+      git_spawn_helper cb, 'rev-parse', gh_pages_branch
+
+    get_doc_dir_sha : (cb) ->
+      git_spawn_helper cb, 'rev-parse', "master:#{document_directory}"
+
+    get_doc_commit_message : (cb) ->
+      git_spawn_helper cb, 'log', "--format='%s'", '-n', 1 , document_directory
+
+    create_new_commit : [
+      'get_gh_pages_sha'
+      'get_doc_dir_sha'
+      'get_doc_commit_message'
+
+      (cb, results) ->
+        #this works at git version 1.8.0.2, and NOT WORK at 1.7 - update git
+        git_spawn_helper cb, 'commit-tree',
+          '-p', results.get_gh_pages_sha,
+          '-m', results.get_doc_commit_message,
+          results.get_doc_dir_sha
+    ]
+
+
+    save_commit : [
+      'create_new_commit'
+      (cb, results) ->
+        git_spawn_helper cb, 'update-ref',
+          "refs/heads/#{gh_pages_branch}", # ITS IMPORTANT TO PREFIX WITH |refs/heads/|
+          results.create_new_commit
+    ]
+
+    # finalizer
+    (err, results) ->
+      if err
+        console.log err 
+        process.exit 1
+
+      console.log results.save_commit 
+      console.log 'Update for GitHub pages done'.info
+
 
 module.exports = 
   build_coffee        : build_coffee
@@ -110,4 +164,5 @@ module.exports =
   compile_jade        : compile_jade
   copy_dir            : copy_dir
   build_json          : build_json
+  update_gh_pages     : update_gh_pages
 

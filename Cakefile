@@ -31,6 +31,10 @@ commands = require path.join paths.cake_dep, 'command'
 # add dev_server
 {dev_server} = require path.join paths.cake_dep, 'dev_server'
 
+# for online gh-pages docs
+gh_pages_branch = 'gh-pages'
+orgin_doc_dir   = 'test_browser'
+
 ###
 Now tasks
 ###
@@ -69,6 +73,10 @@ task 'build_html_browser_page', 'build html form jade for browser', build_html_b
 
 task 'start_dev_server', 'start developer server', start_dev_server = (cb) ->
   dev_server project_name, project_file_name, root_path
+
+task 'update_gh_pages', 'update static html for gh_pages branch', update_gh_pages = (cb) ->
+   commands.update_gh_pages cb, orgin_doc_dir, gh_pages_branch
+
  
 ###
 EX-task below, now just function
