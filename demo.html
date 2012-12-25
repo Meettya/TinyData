@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>TinyData project</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"><style>
+    body { padding-top: 60px; }
+    </style>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css">
+    <!--link(rel='stylesheet', href='/css/style.css')-->
+    <script src="vendor/jquery-1.8.3.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/prettify.css">
+    <script src="vendor/prettify.js"></script>
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner"><a href="https://github.com/Meettya/TinyData"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+        <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="index.html" class="brand">TinyData</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="index.html">Home</a></li>
+              <li> <a href="test.html">Test suite</a></li>
+              <li><a href="examples.html">Examples</a></li>
+              <li><a href="demo.html">Demo</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- add active toggler to navbar--><script type="text/javascript">
+(function() {
+
+  $(function() {
+    var page_path;
+    page_path = /([^/]+)$/.exec(this.location.pathname);
+    $(".nav li a[href='" + page_path[1] + "']").parents('li').addClass('active');
+    return null;
+  });
+
+}).call(this);
+</script>
+    <link rel="stylesheet" href="css/stars.css">
+    <!-- only head.js needed at first-->
+    <script src="vendor/head.load-0.99.min.js"></script>
+    <!--head.js loader--><script type="text/javascript">
+(function() {
+
+  head.js("vendor/lodash-1.0.0-rc.1.min.js", {
+    tinydata: "js/tinydata.js"
+  });
+
+}).call(this);
+</script><script type="text/javascript">
+(function() {
+
+  head.ready("tinydata", function() {
+    return $(function() {
+      /*
+          This is second example code
+      */
+
+      var calculate_rating, comment_template, post_template, show_blog_example;
+      post_template = _.template("<div class=\"stars empty\">\n  <div class=\"stars filled_<%= average_rating %>\"></div>\n</div>\n<strong>Title:</strong>  <span><%= post_data.title %></span></br>\n<strong>Author:</strong>  <span><%= post_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= post_data.text %></span></br>\n<span class=\"btn btn-primary btn-small <%= comment_num ? 'active': 'disabled' %>\" data-toggle=\"collapse\" data-target=\"#comments_to_<%= post_idx %>\">Comments (<%= comment_num %>):<span></br>");
+      comment_template = _.template("<div class=\"span5 offset<%= comment_shift %> well\">\n<strong>Author:</strong>  <span><%= comment_data.author.name %></span></br>\n<strong>Text:</strong>  <span><%= comment_data.text %></span></br>\n</div>");
+      calculate_rating = function(object_td) {
+        var fake_key, make_rating_values_rule, posts_with_raitings, rating_aggregator, rating_stub, rating_values_rule, real_key, verifyed_rating, _i, _len, _ref;
+        make_rating_values_rule = function(regexp_transform_fn, path_delimiter) {
+          var anonymous_rating_rule, transformed_verifyed_rating_regexp;
+          transformed_verifyed_rating_regexp = regexp_transform_fn(/^(\d+)\.comments\.\d+\.(?:comments\.\d+\.)*rating\.([^.]+)/);
+          anonymous_rating_rule = "^(\\d+)" + path_delimiter + "rating" + path_delimiter + "([^" + path_delimiter + "]+)";
+          return function(stringifyed_item, emit) {
+            var mached_data;
+            if (mached_data = stringifyed_item.match(transformed_verifyed_rating_regexp)) {
+              emit(mached_data[1], parseFloat(mached_data[2]));
+            } else if (mached_data = stringifyed_item.match(anonymous_rating_rule)) {
+              emit("_" + mached_data[1], parseFloat(mached_data[2]));
+            }
+            return null;
+          };
+        };
+        rating_aggregator = function(key, values, emit) {
+          var sum_of_all_rating;
+          sum_of_all_rating = _.reduce(values, function(memo, num) {
+            return memo + num;
+          });
+          emit(key, sum_of_all_rating / values.length);
+          return null;
+        };
+        rating_values_rule = make_rating_values_rule(object_td.doTransormRegExp, object_td.getPathDelimiter('internal'));
+        posts_with_raitings = object_td.seekOutVerso(rating_values_rule, rating_aggregator);
+        rating_stub = 3;
+        _ref = _.keys(posts_with_raitings);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          fake_key = _ref[_i];
+          if (!('_' === fake_key.charAt(0))) {
+            continue;
+          }
+          real_key = fake_key.slice(1);
+          verifyed_rating = posts_with_raitings[real_key];
+          if (verifyed_rating) {
+            posts_with_raitings[real_key] = Math.ceil((posts_with_raitings[fake_key] * 0.2 + posts_with_raitings[real_key] * 0.8) * 2);
+          } else {
+            posts_with_raitings[real_key] = Math.ceil((posts_with_raitings[fake_key] * 0.5 + rating_stub * 0.5) * 2);
+          }
+          delete posts_with_raitings[fake_key];
+        }
+        return posts_with_raitings;
+      };
+      show_blog_example = function(in_data) {
+        var TinyData, main_container, object_td, post_with_comments_rule, processed_data, ratings_for_post;
+        TinyData = require('tinydata');
+        object_td = new TinyData(in_data, {
+          debug: true
+        });
+        post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/;
+        processed_data = object_td.seekOutVerso(post_with_comments_rule);
+        ratings_for_post = calculate_rating(object_td);
+        main_container = $('<div>');
+        _.each(in_data, function(post_prop, post_idx) {
+          var comment_container, post, post_object, _ref;
+          post_object = {
+            post_idx: post_idx,
+            post_data: in_data[post_idx],
+            comment_num: (_ref = processed_data[post_idx]) != null ? _ref.length : void 0,
+            average_rating: ratings_for_post[post_idx]
+          };
+          _.defaults(post_object, {
+            comment_num: 0
+          });
+          post = $("<div class='span8 well'>").html(post_template(post_object)).appendTo(main_container);
+          comment_container = $("<div class='span10 collapse' id='comments_to_" + post_idx + "'>").appendTo(post);
+          return _.each(processed_data[post_idx], function(comment_path) {
+            var comment, comment_object, comment_shift;
+            comment_shift = (comment_path.split('.').length - 3) / 2;
+            comment_object = {
+              comment_data: object_td.getDataByPath(comment_path),
+              comment_shift: comment_shift
+            };
+            return comment = $("<div class='row'>").html(comment_template(comment_object)).appendTo(comment_container);
+          });
+        });
+        return main_container.appendTo($('.blog_examlpe'));
+      };
+      return $.getJSON("example/blog_example_data.json", show_blog_example);
+    });
+  });
+
+}).call(this);
+</script>
+    <div class="container">
+      <h1>TinyData Live Demo</h1>
+      <div class="span8"><span class="label label-important">Внимание!</span>
+        <div class="well">
+          <p>Смертельный номер, работа без страховки!</p><em>Ну не дизайнер я, чувство прекрасного меня ненавидит :)</em>
+          <p><em>Помогите с версткой, а?</em></p>
+        </div>
+      </div>
+      <div class="span8">
+        <p>
+          Итого для формирования страницы а-ля блог, 
+          имея на входе только сырые данные а-ля выдача MongoDB,
+          мы использовали:
+          <ul class="unstyled">
+            <li>1шт. RegExp (довольно простой и понятный)</li>
+            <li>2шт. _.each нерекурсивной природы</li>
+            <li>2шт. _.template</li>
+          </ul> 
+          В сумме 40 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
+          без гольфизма (в нотации Coffeescript) для "блога".
+        </p>
+        <p>
+          Плюс 30 строк для звездочек рейтинга, не особо утруждая себя в сокращении кода.
+          Высчитаного, кстати, на лету и по довольно натуральному алгоритму (который дает простор для кастомизации на клиенте).
+          На него так же пойдет пара RegExp-ов, и немного итераторов.
+        </p>
+      </div>
+      <div class="blog_examlpe"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+.stars {
+  background: url(images/sprite.png) repeat-x top left;
+  height: 22px; }
+.stars.empty {
+  background-position: 0 -22px;
+  width: 110px; }
+.stars.filled_0 {
+  width: 0px; }
+.stars.filled_1 {
+  width: 11px; }
+.stars.filled_2 {
+  width: 22px; }
+.stars.filled_3 {
+  width: 22px; }
+.stars.filled_4 {
+  width: 44px; }
+.stars.filled_5 {
+  width: 55px; }
+.stars.filled_5 {
+  width: 66px; }
+.stars.filled_7 {
+  width: 77px; }
+.stars.filled_8 {
+  width: 88px; }
+.stars.filled_9 {
+  width: 99px; }
+.stars.filled_10 {
+  width: 110px; }
