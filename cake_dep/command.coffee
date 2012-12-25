@@ -108,13 +108,14 @@ This is node.js version of bash gh-pages updater, now in color! :)
 update_gh_pages = (cb, document_directory, gh_pages_branch) ->
 
   # internal spawn helper
-  git_spawn_helper = (cb, args...) =>
+  git_spawn_helper = (cb, command, args...) =>
     #console.log args
-    git_spawn = spawn 'git', args
+    git_spawn = spawn 'git', [command].concat args
     git_spawn.stderr.on 'data', (buffer) -> cb "#{buffer}".error
     git_spawn.on 'exit', (status) ->
       process.exit(1) if status != 0
-      cb null, 'OK'
+      if command is 'update-ref'
+        cb null, 'OK'
     git_spawn.stdout.on 'data', (data) ->
       cb null, "#{data}".trim()
 
