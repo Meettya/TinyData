@@ -102,6 +102,9 @@ build_json = (cb, source_dir, result_dir, filter) ->
       console.log " -> json file |#{filename}| build done".info
       cb() if typeof cb is 'function'    
 
+###
+This is node.js version of bash gh-pages updater, now in color! :)
+###
 update_gh_pages = (cb, document_directory, gh_pages_branch) ->
 
   # internal spawn helper
@@ -139,7 +142,6 @@ update_gh_pages = (cb, document_directory, gh_pages_branch) ->
           '-m', results.get_doc_commit_message,
           results.get_doc_dir_sha
     ]
-
 
     save_commit : [
       'create_new_commit'
