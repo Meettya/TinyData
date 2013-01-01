@@ -13,6 +13,34 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="css/prettify.css">
     <script src="vendor/prettify.js"></script>
+    <!-- CS google analytics--><script type="text/javascript">
+(function() {
+  var ga, protocol, s, tracking_id, _gaq;
+
+  tracking_id = 'UA-37370501-1';
+
+  _gaq = window._gaq || (window._gaq = []);
+
+  _gaq.push(['_setAccount', tracking_id]);
+
+  _gaq.push(['_trackPageview']);
+
+  protocol = 'https:' === document.location.protocol ? 'https://ssl' : 'http://www';
+
+  ga = document.createElement('script');
+
+  ga.type = 'text/javascript';
+
+  ga.async = true;
+
+  ga.src = "" + protocol + ".google-analytics.com/ga.js";
+
+  s = document.getElementsByTagName('script')[0];
+
+  s.parentNode.insertBefore(ga, s);
+
+}).call(this);
+</script>
   </head>
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -178,33 +206,5 @@
       </div>
       <div class="blog_examlpe"></div>
     </div>
-    <!-- CS google analytics--><script type="text/javascript">
-(function() {
-  var ga, protocol, s, tracking_id, _gaq;
-
-  tracking_id = 'UA-37370501-1';
-
-  _gaq = window._gaq || (window._gaq = []);
-
-  _gaq.push(['_setAccount', tracking_id]);
-
-  _gaq.push(['_trackPageview']);
-
-  protocol = 'https:' === document.location.protocol ? 'https://ssl' : 'http://www';
-
-  ga = document.createElement('script');
-
-  ga.type = 'text/javascript';
-
-  ga.async = true;
-
-  ga.src = "" + protocol + ".google-analytics.com/ga.js";
-
-  s = document.getElementsByTagName('script')[0];
-
-  s.parentNode.insertBefore(ga, s);
-
-}).call(this);
-</script>
   </body>
 </html>
