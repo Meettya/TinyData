@@ -11,7 +11,7 @@ TinyData implement simple 'text-like' searching in any deep-structure data, for 
 
 ## Documentation:
 
-See [full online documentation](http://meettya.github.com/TinyData/index.html).
+See [full online documentation](http://tinydata.ru/index.html).
 
 
 ## Install:
