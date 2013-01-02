@@ -15,25 +15,25 @@
     <script src="vendor/prettify.js"></script>
     <!-- CS google analytics--><script type="text/javascript">
 (function() {
-  var ga, protocol, s, tracking_id, _gaq;
+  var ga, ga_settings, s, tracking_id, _gaq,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   tracking_id = 'UA-37370501-1';
 
+  ga_settings = {
+    type: 'text/javascript',
+    async: true,
+    src: 'http://www.google-analytics.com/ga.js'
+  };
+
   _gaq = window._gaq || (window._gaq = []);
 
-  _gaq.push(['_setAccount', tracking_id]);
-
-  _gaq.push(['_trackPageview']);
-
-  protocol = 'https:' === document.location.protocol ? 'https://ssl' : 'http://www';
+  _gaq.push(['_setAccount', tracking_id], ['_trackPageview']);
 
   ga = document.createElement('script');
 
-  ga.type = 'text/javascript';
-
-  ga.async = true;
-
-  ga.src = "" + protocol + ".google-analytics.com/ga.js";
+  __extends(ga, ga_settings);
 
   s = document.getElementsByTagName('script')[0];
 
