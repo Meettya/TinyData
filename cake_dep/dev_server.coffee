@@ -1,11 +1,12 @@
 #!/usr/bin/env coffee
 
-stitch    = require 'stitch'
-stylus    = require 'stylus'
-express   = require 'express'
-path      = require 'path'
-fs        = require 'fs'
-coffee    = require 'coffee-script'
+stitch      = require 'stitch'
+stylus      = require 'stylus'
+express     = require 'express'
+path        = require 'path'
+fs          = require 'fs'
+coffee      = require 'coffee-script'
+livereload  = require 'livereload2'
 
 require './colorizer'
 
@@ -81,6 +82,10 @@ dev_server = (project_name, file_name, root_path) ->
 
   console.log "Starting server on port: #{port}".info
   app.listen port
+
+  # live reload suport
+  livereload_server = livereload.createServer exts: ['less', 'jade']
+  livereload_server.watch path.join root_path, '/develop_suite'
 
 module.exports = 
   dev_server        : dev_server

@@ -28,7 +28,8 @@
       "fs-extra" : "latest",
       "async" : "latest",
       "lodash" : "latest",
-      "gift" : "latest"
+      "gift" : "latest",
+      "livereload" : "git://github.com/sebv/node-livereload.git#livereload2"
   },
   "scripts": {
       "test": "cake test_coffee"
