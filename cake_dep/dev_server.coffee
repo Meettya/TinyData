@@ -7,6 +7,7 @@ path        = require 'path'
 fs          = require 'fs'
 coffee      = require 'coffee-script'
 livereload  = require 'livereload2'
+webpack     = require 'webpack'
 
 require './colorizer'
 
@@ -76,6 +77,12 @@ dev_server = (project_name, file_name, root_path) ->
     res.type 'application/json'
     res.send data
 
+  app.get "/js/tinydata.wp.js", (req, res) ->
+    lib_path = path.join root_path, "/lib", "/tinydata.js"
+    options = 
+      library : 'window.TinyData'
+    
+    webpack lib_path, options, 
 
   # our widget
   app.get "/js/#{file_name}.js", my_package.createServer()
