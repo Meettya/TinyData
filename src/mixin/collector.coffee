@@ -2,9 +2,7 @@
 This is Collector mixin - its create layout for object walker and result collection
 ###
 
-# resolve require from [window] or by require() 
-# use _.isPlainObject(x) to speedup type resolution
-_ = @_ ? require 'lodash'
+_ = require 'lodash'
 
 {getItType} = require "../lib/type_detector"
 

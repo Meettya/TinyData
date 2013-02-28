@@ -5,17 +5,24 @@ stylus      = require 'stylus'
 express     = require 'express'
 path        = require 'path'
 fs          = require 'fs'
-coffee      = require 'coffee-script'
 livereload  = require 'livereload2'
-webpack     = require 'webpack'
+Clinch      = require 'clinch'
 
 require './colorizer'
 
-# read coffee, than compile and return result
-read_and_compile_from_coffee = (root_path, dir_name, file_name, cb) ->
-  fs.readFile (path.join root_path, dir_name, "#{file_name}.coffee"), 'utf8', (err, data) ->
-    throw err if err
-    cb coffee.compile data
+packer = new Clinch()
+
+# this function will create package on the fly
+clinch_on_the_fly = (root_path, dir_name, file_name, cb) ->
+  
+  pack_config = 
+    bundle : 
+      test_suite : path.join root_path, dir_name, file_name
+    replacement :
+      lodash : path.join root_path, "web_modules", "lodash"
+
+  packer.buldPackage 'tinydata_package', pack_config, cb
+
 
 # require data and return it for JSON
 require_and_return_data = (root_path, dir_name, file_name) ->
@@ -29,15 +36,11 @@ dev_server = (project_name, file_name, root_path) ->
 
   port = process.env.PORT or 3000
 
-  my_package = stitch.createPackage(
-    # Specify the paths you want Stitch to automatically bundle up
-    paths: [
-      path.join root_path, "/src"
-    ]
-    # Specify your base libraries
-    dependencies: [
-    ]
-  )
+  pack_config = 
+    bundle : 
+      TinyData : path.join root_path, "src", "tinydata"
+    replacement :
+      lodash : path.join root_path, "web_modules", "lodash"
 
   app = express()
   app.locals.pretty = true
@@ -66,7 +69,7 @@ dev_server = (project_name, file_name, root_path) ->
   # this is our test files
   app.get '/test/:filename', (req, res) -> 
     [filename, ext] = req.param('filename').split '.'
-    read_and_compile_from_coffee root_path, 'test', filename, (data) =>
+    clinch_on_the_fly root_path, 'test', filename, (err, data) ->
       res.type 'application/json'
       res.send data
 
@@ -77,15 +80,11 @@ dev_server = (project_name, file_name, root_path) ->
     res.type 'application/json'
     res.send data
 
-  app.get "/js/tinydata.wp.js", (req, res) ->
-    lib_path = path.join root_path, "/lib", "/tinydata.js"
-    options = 
-      library : 'window.TinyData'
-    
-    webpack lib_path, options, 
-
   # our widget
-  app.get "/js/#{file_name}.js", my_package.createServer()
+  app.get "/js/#{file_name}.js", (req, res) ->
+    packer.buldPackage 'tinydata_package', pack_config, (err, data) ->
+      res.type 'application/json'
+      res.send data
 
   console.log "Starting server on port: #{port}".info
   app.listen port

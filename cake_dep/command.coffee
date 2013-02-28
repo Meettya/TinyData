@@ -10,6 +10,11 @@ fs            = require 'fs-extra'
 Stitch        = require 'stitch'
 UglifyJS      = require 'uglify-js'
 async         = require 'async'
+Clinch        = require 'clinch'
+_             = require 'lodash'
+
+
+packer = new Clinch()
 
 # add color to console
 module.exports = require './colorizer'
@@ -68,6 +73,31 @@ build_stitched_js = (cb, source_dir, result_dir, result_filename) ->
       throw err if err?
       console.log "Compiled #{result_filename}.js".info
       cb() if typeof cb is 'function'
+  null
+
+build_clinched_js = (cb, source_dir, result_dir, result_filename) ->
+  pack_config = 
+    bundle : 
+      TinyData : path.join source_dir, result_filename
+    replacement :
+      lodash : path.join source_dir, '..', "web_modules", "lodash"
+
+  packer.buldPackage 'tinydata_package', pack_config, (err, source) ->
+    throw err if err?
+    fs.writeFile "#{path.join result_dir, result_filename}.js", source, encoding='utf8', (err) ->
+      throw err if err?
+      console.log "Compiled #{result_filename}.js".info
+      cb() if typeof cb is 'function'
+  null
+
+build_clinched_js_files = (cb, source_dir, result_dir, filter) ->
+  files = make_files_list source_dir, filter
+
+  alldone = _.after(files.length, cb);
+
+  for file in files
+    build_clinched_js alldone, source_dir, result_dir, path.basename file, '.coffee'
+
   null
 
 minify_browser_lib = (cb, result_dir, result_filename) ->
@@ -166,9 +196,12 @@ module.exports =
   build_coffee        : build_coffee
   test_coffee         : test_coffee
   build_stitched_js   : build_stitched_js
+  build_clinched_js   : build_clinched_js
+  build_clinched_js_files : build_clinched_js_files
   minify_browser_lib  : minify_browser_lib
   compile_jade        : compile_jade
   copy_dir            : copy_dir
   build_json          : build_json
   update_gh_pages     : update_gh_pages
+
 

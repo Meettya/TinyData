@@ -3,7 +3,10 @@
   "version": "0.2.9",
   "description": "Tiny data mining engine, with path materialization and naive map-reduce logic",
   "main": "index.js",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Meettya/TinyData.git"
+  },
   "keywords": [
     "object",
     "search",
@@ -11,37 +14,32 @@
   ],
   "author": "Dmitrii Karpich <meettya@gmail.com>",
   "dependencies": {
-      "lodash" : "latest"
+    "lodash": "latest"
   },
   "devDependencies": {
-      "coffee-script": ">=1.3.3",
-      "underscore": ">=1.3.3",
-      "chai": "latest",
-      "mocha": "latest",
-      "jade": "latest",
-      "stitch": "latest",
-      "express": "latest",
-      "eco": "latest",
-      "stylus": "latest",
-      "colors" : "latest",
-      "uglify-js" : "latest",
-      "fs-extra" : "latest",
-      "async" : "latest",
-      "lodash" : "latest",
-      "gift" : "latest",
-      "livereload" : "git://github.com/sebv/node-livereload.git#livereload2"
+    "coffee-script": ">=1.3.3",
+    "underscore": ">=1.3.3",
+    "chai": "latest",
+    "mocha": "latest",
+    "jade": "latest",
+    "stitch": "latest",
+    "express": "latest",
+    "eco": "latest",
+    "stylus": "latest",
+    "colors": "latest",
+    "uglify-js": "latest",
+    "fs-extra": "latest",
+    "async": "latest",
+    "lodash": "latest",
+    "gift": "latest",
+    "livereload": "git://github.com/sebv/node-livereload.git#livereload2",
+    "clinch": "latest"
   },
   "scripts": {
-      "test": "cake test_coffee"
-  },
-  "repository": {
-      "type": "git",
-      "url": "https://github.com/Meettya/TinyData.git"
+    "test": "cake test_coffee"
   },
   "engines": {
-      "node": ">=0.6.0"
+    "node": ">=0.6.0"
   },
   "license": "MIT"
-
-
 }

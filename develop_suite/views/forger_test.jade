@@ -18,8 +18,7 @@ html
       "vendor/lodash-1.0.0-rc.1.min.js",
       "vendor/mocha-1.7.3.min.js",
       { "chai" : "vendor/chai-1.4.0.min.js" },
-      "js/tinydata.js",
-      "test/regexp_dot_forger-test.js", -> mocha.run()
+      "test/regexp_dot_forger-test.js?#{+new Date()}", -> mocha.run()
 
       head.ready "chai", ->
         chai.should()

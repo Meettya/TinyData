@@ -102,7 +102,7 @@ build_lib_node_internal_mixin = (cb) ->
 
 #task 'build_lib_browser', 'build stitched module for browser', 
 build_lib_browser = (cb) ->
-  commands.build_stitched_js cb, paths.src_dir, paths.lib_browser_dir, project_file_name
+  commands.build_clinched_js cb, paths.src_dir, paths.lib_browser_dir, project_file_name
 
 #task 'minify_lib_browser', 'minify builded module for browser', 
 minify_lib_browser = (cb) ->
@@ -110,7 +110,7 @@ minify_lib_browser = (cb) ->
 
 #task 'build_test_browser_js', 'build test js for browser', 
 build_test_browser_js = (cb) ->
-  commands.build_coffee cb, paths.test_dir, path.join(paths.test_browser_dir, 'test'), /-(?:stress_)?test\.coffee$/
+  commands.build_clinched_js_files cb, paths.test_dir, path.join(paths.test_browser_dir, 'test'), /-(?:stress_)?test\.coffee$/
 
 #task 'copy_lib_to_test_browser', 'copy library to browser test', 
 copy_lib_to_test_browser = (cb) ->

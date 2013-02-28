@@ -9,7 +9,7 @@ block content
   //head.js loader
   :coffeescript
     head.js "vendor/lodash-1.0.0-rc.1.min.js",
-    { tinydata : "js/tinydata.js" }
+    { tinydata : "js/tinydata.js?#{+new Date()}" }
 
   :coffeescript
 
@@ -72,7 +72,7 @@ block content
 
         show_blog_example = (in_data) ->
 
-          TinyData = require 'tinydata'
+          {TinyData} = tinydata_package
           object_td = new TinyData in_data, debug : yes
           post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
           processed_data = object_td.seekOutVerso post_with_comments_rule

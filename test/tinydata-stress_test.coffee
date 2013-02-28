@@ -1,15 +1,11 @@
 ###
 Test suite for node AND browser in one file
-So, we are need some data from global
-Its so wrong, but its OK for test
 ###
 
 # resolve require from [window] or by require() 
-_ = @_ ? require 'lodash'
+_ = require 'lodash'
 
-lib_path = GLOBAL?.lib_path || ''
-
-TinyData = require "#{lib_path}tinydata"
+TinyData = require "../src/tinydata"
 
 describe 'TinyData: stress test', ->
 
