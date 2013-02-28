@@ -19,9 +19,7 @@ logOnDemand = (methodBody) ->
       console.log "#{args[0]} -> #{__rval__}"
     __rval__
 
-# resolve require from [window] or by require() 
-# use _.isPlainObject(x) to speedup type resolution
-_ = @_ ? require 'lodash'
+_ = require 'lodash'
 
 class RegExpDotForger 
 

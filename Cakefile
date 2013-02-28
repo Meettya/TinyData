@@ -31,6 +31,10 @@ commands = require path.join paths.cake_dep, 'command'
 # add dev_server
 {dev_server} = require path.join paths.cake_dep, 'dev_server'
 
+# for online gh-pages docs
+gh_pages_branch = 'refs/heads/gh-pages'
+orgin_doc_dir   = 'test_browser'
+
 ###
 Now tasks
 ###
@@ -69,6 +73,10 @@ task 'build_html_browser_page', 'build html form jade for browser', build_html_b
 
 task 'start_dev_server', 'start developer server', start_dev_server = (cb) ->
   dev_server project_name, project_file_name, root_path
+
+task 'update_gh_pages', 'update static html for gh_pages branch', update_gh_pages = (cb) ->
+   commands.update_gh_pages cb, orgin_doc_dir, gh_pages_branch
+
  
 ###
 EX-task below, now just function
@@ -94,7 +102,7 @@ build_lib_node_internal_mixin = (cb) ->
 
 #task 'build_lib_browser', 'build stitched module for browser', 
 build_lib_browser = (cb) ->
-  commands.build_stitched_js cb, paths.src_dir, paths.lib_browser_dir, project_file_name
+  commands.build_clinched_js cb, paths.src_dir, paths.lib_browser_dir, project_file_name
 
 #task 'minify_lib_browser', 'minify builded module for browser', 
 minify_lib_browser = (cb) ->
@@ -102,7 +110,7 @@ minify_lib_browser = (cb) ->
 
 #task 'build_test_browser_js', 'build test js for browser', 
 build_test_browser_js = (cb) ->
-  commands.build_coffee cb, paths.test_dir, path.join(paths.test_browser_dir, 'test'), /-(?:stress_)?test\.coffee$/
+  commands.build_clinched_js_files cb, paths.test_dir, path.join(paths.test_browser_dir, 'test'), /-(?:stress_)?test\.coffee$/
 
 #task 'copy_lib_to_test_browser', 'copy library to browser test', 
 copy_lib_to_test_browser = (cb) ->

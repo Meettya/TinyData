@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/Meettya/TinyData.png)](http://travis-ci.org/Meettya/TinyData)
+[![Build Status](https://travis-ci.org/Meettya/TinyData.png?branch=master)](http://travis-ci.org/Meettya/TinyData)
 
 # TinyData
 
@@ -11,7 +11,7 @@ TinyData implement simple 'text-like' searching in any deep-structure data, for 
 
 ## Documentation:
 
-See [full online documentation](http://meettya.github.com/TinyData/index.html).
+See [full online documentation](http://tinydata.ru/index.html).
 
 
 ## Install:

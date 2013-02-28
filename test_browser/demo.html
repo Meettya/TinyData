@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>TinyData project</title>
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"><style>
@@ -12,10 +13,38 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="css/prettify.css">
     <script src="vendor/prettify.js"></script>
+    <!-- CS google analytics--><script type="text/javascript">
+(function() {
+  var ga, ga_settings, s, tracking_id, _gaq,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  tracking_id = 'UA-37370501-1';
+
+  ga_settings = {
+    type: 'text/javascript',
+    async: true,
+    src: 'http://www.google-analytics.com/ga.js'
+  };
+
+  _gaq = window._gaq || (window._gaq = []);
+
+  _gaq.push(['_setAccount', tracking_id], ['_trackPageview']);
+
+  ga = document.createElement('script');
+
+  __extends(ga, ga_settings);
+
+  s = document.getElementsByTagName('script')[0];
+
+  s.parentNode.insertBefore(ga, s);
+
+}).call(this);
+</script>
   </head>
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
+      <div class="navbar-inner"><a href="https://github.com/Meettya/TinyData"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
         <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="index.html" class="brand">TinyData</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
@@ -23,8 +52,6 @@
               <li> <a href="test.html">Test suite</a></li>
               <li><a href="examples.html">Examples</a></li>
               <li><a href="demo.html">Demo</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li>
             </ul>
           </div>
         </div>
@@ -49,7 +76,7 @@
 (function() {
 
   head.js("vendor/lodash-1.0.0-rc.1.min.js", {
-    tinydata: "js/tinydata.js"
+    tinydata: "js/tinydata.js?" + (+new Date())
   });
 
 }).call(this);
@@ -111,7 +138,7 @@
       };
       show_blog_example = function(in_data) {
         var TinyData, main_container, object_td, post_with_comments_rule, processed_data, ratings_for_post;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -154,13 +181,13 @@
       <h1>TinyData Live Demo</h1>
       <div class="span8"><span class="label label-important">Внимание!</span>
         <div class="well">
-          <p>Смертельный номер, работа без каната!</p><em>Ну ну дизайнер я, чувство прекрасного меня ненавидит :)</em>
+          <p>Смертельный номер, работа без страховки!</p><em>Ну не дизайнер я, чувство прекрасного меня ненавидит :)</em>
           <p><em>Помогите с версткой, а?</em></p>
         </div>
       </div>
       <div class="span8">
         <p>
-          Итого для формирования страницы а-ля блог, 
+          Итого: для формирования страницы а-ля блог, 
           имея на входе только сырые данные а-ля выдача MongoDB,
           мы использовали:
           <ul class="unstyled">
@@ -168,7 +195,7 @@
             <li>2шт. _.each нерекурсивной природы</li>
             <li>2шт. _.template</li>
           </ul> 
-          В сумме 40 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
+          В сумме 40 строк (шаблоны не считаем), с параграфами и нормальным именованием переменных,
           без гольфизма (в нотации Coffeescript) для "блога".
         </p>
         <p>

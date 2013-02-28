@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>TinyData project</title>
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"><style>
@@ -12,10 +13,38 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="css/prettify.css">
     <script src="vendor/prettify.js"></script>
+    <!-- CS google analytics--><script type="text/javascript">
+(function() {
+  var ga, ga_settings, s, tracking_id, _gaq,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  tracking_id = 'UA-37370501-1';
+
+  ga_settings = {
+    type: 'text/javascript',
+    async: true,
+    src: 'http://www.google-analytics.com/ga.js'
+  };
+
+  _gaq = window._gaq || (window._gaq = []);
+
+  _gaq.push(['_setAccount', tracking_id], ['_trackPageview']);
+
+  ga = document.createElement('script');
+
+  __extends(ga, ga_settings);
+
+  s = document.getElementsByTagName('script')[0];
+
+  s.parentNode.insertBefore(ga, s);
+
+}).call(this);
+</script>
   </head>
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
+      <div class="navbar-inner"><a href="https://github.com/Meettya/TinyData"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
         <div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="index.html" class="brand">TinyData</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
@@ -23,8 +52,6 @@
               <li> <a href="test.html">Test suite</a></li>
               <li><a href="examples.html">Examples</a></li>
               <li><a href="demo.html">Demo</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li>
             </ul>
           </div>
         </div>
@@ -48,7 +75,7 @@
 (function() {
 
   head.js("vendor/lodash-1.0.0-rc.1.min.js", {
-    tinydata: "js/tinydata.js"
+    tinydata: "js/tinydata.js?" + (+new Date())
   });
 
 }).call(this);
@@ -74,7 +101,7 @@
       };
       code_example_1 = function(in_data) {
         var TinyData, comments_finalizer, comments_ratings, comments_ratings_rule, object_td;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -103,7 +130,7 @@
       };
       code_example_2 = function(in_data) {
         var TinyData, all_posts, object_td, post_with_comments, post_with_comments_rule, post_without_comments;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -127,7 +154,7 @@
       };
       code_example_3 = function(in_data) {
         var TinyData, make_rating_values_rule, object_td, posts_with_raitings, rating_aggregator, rating_values_rule;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -197,10 +224,10 @@
         </div>
         <div class="span9">
           <h5>Построчный разбор кода в нотации Coffeescript</h5>
-          <pre class="prettyprint">TinyData = require 'tinydata'</pre>
+          <pre class="prettyprint">{TinyData} = tinydata_package</pre>
           <p>
-            TinyData на данный момент собирается для браузера как псевдо-CommonJS модуль
-            , поэтому после загрузки его кода запрашиваем класс<em> (возможно данное поведение будет изменено)</em>.
+            TinyData собирается при помощи `clinch` в бандле `tinydata_package`
+            , из которого мы его и запрашиваем<em> (ни что не мешает использовать другое название бандла, просто пересоберите его)</em>.
           </p>
           <pre class="prettyprint">object_td = new TinyData in_data, debug : yes</pre>
           <p>Создаем объект, на входе <strong>JSON</strong> данные - первый аргумент, а вторым следуют опциональные
@@ -223,17 +250,17 @@
   null</pre>
           <p>
              
-            Функция финализации, по сути поместь <code>Reduce</code>  и <code>finalize</code>  в <strong>MongoDB</strong>.
+            Функция финализации, по сути помесь <code>Reduce</code>  и <code>finalize</code>  в <strong>MongoDB</strong>.
           </p>
           <p>
             Важно понимать, что она получает ключ (одиночное значение) и
             значения (массив из одного или нескольких элементов),
             а эмитировать должна каждое значение отдельно.
-            Это может пригодиться при редукции данных.
+            Это может быть использовано при редукции данных.
           </p>
           <p>
-            В данном случае мы округляем рейтинги каждой записи, для удобства,
-            фактически работая над ключем, а не значением.
+            В данном случае мы округляем рейтинги каждой записи (для удобства),
+            фактически работая над ключом, а не значением.
           </p>
           <pre class="prettyprint">comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer</pre>
           <p>
@@ -282,7 +309,7 @@
         </div>
         <div class="span9">
           <h5>Построчный разбор кода в нотации Coffeescript</h5>
-          <pre class="prettyprint">TinyData = require 'tinydata'
+          <pre class="prettyprint">{TinyData} = tinydata_package
 object_td = new TinyData in_data, debug : yes</pre>
           <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
           <pre class="prettyprint">post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/</pre>
@@ -314,7 +341,7 @@ object_td = new TinyData in_data, debug : yes</pre>
           <div class="well">
             <p>Этот пример нуждается в пояснении интерпретации данных.</p>
             <p>
-              Положим, что для поста у нас есть ретинг от анонимусов, который суммируется в самом посте
+              Положим, что для поста у нас есть рейтинг от анонимусов, который суммируется в самом посте
               и есть оценка поста зарегистрированными пользователями, которые оставили комментарий.
               Проявим больше доверия второй группе, например 80%, а на первых оставим весовой 
               коэффициент в общей оценке всего 20%.
@@ -342,7 +369,7 @@ object_td = new TinyData in_data, debug : yes</pre>
         </div>
         <div class="span9">
           <h5>Построчный разбор кода в нотации Coffeescript</h5>
-          <pre class="prettyprint">TinyData = require 'tinydata'
+          <pre class="prettyprint">{TinyData} = tinydata_package
 object_td = new TinyData in_data, debug : yes</pre>
           <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
           <pre class="prettyprint">make_rating_values_rule = (regexp_transform_fn, path_delimiter) -&gt;

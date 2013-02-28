@@ -3,14 +3,13 @@ extends includes/layout
 block content
   link(rel='stylesheet', href='css/stars.css')
 
-
   // only head.js needed at first
   script(src='vendor/head.load-0.99.min.js')
 
   //head.js loader
   :coffeescript
     head.js "vendor/lodash-1.0.0-rc.1.min.js",
-    { tinydata : "js/tinydata.js" }
+    { tinydata : "js/tinydata.js?#{+new Date()}" }
 
   :coffeescript
 
@@ -73,7 +72,7 @@ block content
 
         show_blog_example = (in_data) ->
 
-          TinyData = require 'tinydata'
+          {TinyData} = tinydata_package
           object_td = new TinyData in_data, debug : yes
           post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
           processed_data = object_td.seekOutVerso post_with_comments_rule
@@ -123,14 +122,14 @@ block content
     div.span8
       span.label.label-important Внимание!
       div.well
-        p Смертельный номер, работа без каната!
-        em Ну ну дизайнер я, чувство прекрасного меня ненавидит :)
+        p Смертельный номер, работа без страховки!
+        em Ну не дизайнер я, чувство прекрасного меня ненавидит :)
         p
           em Помогите с версткой, а?
 
     div.span8
       p
-        | Итого для формирования страницы а-ля блог, 
+        | Итого: для формирования страницы а-ля блог, 
         | имея на входе только сырые данные а-ля выдача MongoDB,
         | мы использовали:
         ul.unstyled
@@ -138,7 +137,7 @@ block content
           li 2шт. _.each нерекурсивной природы
           li 2шт. _.template
         | 
-        | В сумме 40 строк (шаблоны не считаем), с пробелами и нормальным именованием переменных,
+        | В сумме 40 строк (шаблоны не считаем), с параграфами и нормальным именованием переменных,
         | без гольфизма (в нотации Coffeescript) для "блога".
       p
         | Плюс 30 строк для звездочек рейтинга, не особо утруждая себя в сокращении кода.

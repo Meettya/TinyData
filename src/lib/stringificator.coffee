@@ -8,9 +8,7 @@ Its get object and return materialized path, with some changes, like:
 
 ###
 
-# resolve require from [window] or by require() 
-# use _.isPlainObject(x) to speedup type resolution
-_ = @_ ? require 'lodash'
+_ = require 'lodash'
 
 {getItType} = require "./type_detector"
 

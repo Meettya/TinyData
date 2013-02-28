@@ -8,7 +8,7 @@ block content
   //head.js loader
   :coffeescript
     head.js "vendor/lodash-1.0.0-rc.1.min.js",
-    { tinydata : "js/tinydata.js" }
+    { tinydata : "js/tinydata.js?#{+new Date()}" }
 
   :coffeescript
 
@@ -28,7 +28,7 @@ block content
 
         code_example_1 = (in_data) ->
 
-          TinyData = require 'tinydata'
+          {TinyData} = tinydata_package
           object_td = new TinyData in_data, debug : yes
           comments_ratings_rule = /^(\d+\.comments\.\d+\.(?:comments\.\d+\.)*)rating\.([^.]+)/
           comments_finalizer = (key, values, emit) -> 
@@ -55,7 +55,7 @@ block content
 
         code_example_2 = (in_data) ->
 
-          TinyData = require 'tinydata'
+          {TinyData} = tinydata_package
           object_td = new TinyData in_data, debug : yes
           post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/
           post_with_comments = object_td.seekOutVerso post_with_comments_rule
@@ -80,7 +80,7 @@ block content
 
         code_example_3 = (in_data) ->
 
-          TinyData = require 'tinydata'
+          {TinyData} = tinydata_package
           object_td = new TinyData in_data, debug : yes
 
 
@@ -149,11 +149,11 @@ block content
 
       div.span9
         h5 Построчный разбор кода в нотации Coffeescript
-        pre.prettyprint TinyData = require 'tinydata'
+        pre.prettyprint {TinyData} = tinydata_package
         p
-          | TinyData на данный момент собирается для браузера как псевдо-CommonJS модуль
-          | , поэтому после загрузки его кода запрашиваем класс
-          em  (возможно данное поведение будет изменено)
+          | TinyData собирается при помощи `clinch` в бандле `tinydata_package`
+          | , из которого мы его и запрашиваем
+          em  (ни что не мешает использовать другое название бандла, просто пересоберите его)
           | .
 
         pre.prettyprint object_td = new TinyData in_data, debug : yes
@@ -184,7 +184,7 @@ block content
           |   null
 
         p 
-          | Функция финализации, по сути поместь 
+          | Функция финализации, по сути помесь 
           code Reduce
           |   и 
           code finalize
@@ -195,10 +195,10 @@ block content
           | Важно понимать, что она получает ключ (одиночное значение) и
           | значения (массив из одного или нескольких элементов),
           | а эмитировать должна каждое значение отдельно.
-          | Это может пригодиться при редукции данных.
+          | Это может быть использовано при редукции данных.
         p
-          | В данном случае мы округляем рейтинги каждой записи, для удобства,
-          | фактически работая над ключем, а не значением.
+          | В данном случае мы округляем рейтинги каждой записи (для удобства),
+          | фактически работая над ключом, а не значением.
 
         pre.prettyprint comments_ratings = object_td.seekOutVerso comments_ratings_rule, comments_finalizer
         p 
@@ -263,7 +263,7 @@ block content
 
       div.span9
         h5 Построчный разбор кода в нотации Coffeescript
-        pre.prettyprint TinyData = require 'tinydata'
+        pre.prettyprint {TinyData} = tinydata_package
           | object_td = new TinyData in_data, debug : yes
 
         p
@@ -334,7 +334,7 @@ block content
           p
             | Этот пример нуждается в пояснении интерпретации данных.
           p
-            | Положим, что для поста у нас есть ретинг от анонимусов, который суммируется в самом посте
+            | Положим, что для поста у нас есть рейтинг от анонимусов, который суммируется в самом посте
             | и есть оценка поста зарегистрированными пользователями, которые оставили комментарий.
             | Проявим больше доверия второй группе, например 80%, а на первых оставим весовой 
             | коэффициент в общей оценке всего 20%.
@@ -363,7 +363,7 @@ block content
 
       div.span9
         h5 Построчный разбор кода в нотации Coffeescript
-        pre.prettyprint TinyData = require 'tinydata'
+        pre.prettyprint {TinyData} = tinydata_package
           | object_td = new TinyData in_data, debug : yes
 
         p

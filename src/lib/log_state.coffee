@@ -4,6 +4,7 @@ This is log state object
 Its configured by incoming object and return turned on statuses
 ###
 
+
 class LogState 
 
   # NB - options may have some another settings from main object - just ignore it

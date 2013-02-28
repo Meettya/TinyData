@@ -7,7 +7,7 @@ Its get object and filter (and may be convert) it to natural dot notation
 
 # resolve require from [window] or by require() 
 # use _.isPlainObject(x) to speedup type resolution
-_ = @_ ? require 'lodash'
+_ = require 'lodash'
 
 {getItType} = require "./type_detector"
 

@@ -9,6 +9,12 @@ fs            = require 'fs-extra'
 {spawn, exec} = require 'child_process'
 Stitch        = require 'stitch'
 UglifyJS      = require 'uglify-js'
+async         = require 'async'
+Clinch        = require 'clinch'
+_             = require 'lodash'
+
+
+packer = new Clinch()
 
 # add color to console
 module.exports = require './colorizer'
@@ -69,6 +75,31 @@ build_stitched_js = (cb, source_dir, result_dir, result_filename) ->
       cb() if typeof cb is 'function'
   null
 
+build_clinched_js = (cb, source_dir, result_dir, result_filename) ->
+  pack_config = 
+    bundle : 
+      TinyData : path.join source_dir, result_filename
+    replacement :
+      lodash : path.join source_dir, '..', "web_modules", "lodash"
+
+  packer.buldPackage 'tinydata_package', pack_config, (err, source) ->
+    throw err if err?
+    fs.writeFile "#{path.join result_dir, result_filename}.js", source, encoding='utf8', (err) ->
+      throw err if err?
+      console.log "Compiled #{result_filename}.js".info
+      cb() if typeof cb is 'function'
+  null
+
+build_clinched_js_files = (cb, source_dir, result_dir, filter) ->
+  files = make_files_list source_dir, filter
+
+  alldone = _.after(files.length, cb);
+
+  for file in files
+    build_clinched_js alldone, source_dir, result_dir, path.basename file, '.coffee'
+
+  null
+
 minify_browser_lib = (cb, result_dir, result_filename) ->
   minify_result = UglifyJS.minify path.join result_dir, "#{result_filename}.js"
   fs.writeFile "#{path.join result_dir, result_filename}.min.js", minify_result.code, encoding='utf8', (err) ->
@@ -101,13 +132,76 @@ build_json = (cb, source_dir, result_dir, filter) ->
       console.log " -> json file |#{filename}| build done".info
       cb() if typeof cb is 'function'    
 
+###
+This is node.js version of bash gh-pages updater, now in color! :)
+###
+update_gh_pages = (cb, document_directory, gh_pages_branch) ->
+
+  # internal spawn helper
+  git_spawn_helper = (cb, command, args...) =>
+    #console.log args
+    git_spawn = spawn 'git', [command].concat args
+    git_spawn.stderr.on 'data', (buffer) -> cb "#{buffer}".error
+    git_spawn.on 'exit', (status) ->
+      process.exit(1) if status != 0
+      if command is 'update-ref'
+        cb null, 'OK'
+    git_spawn.stdout.on 'data', (data) ->
+      cb null, "#{data}".trim()
+
+  # start magic engine
+  async.auto
+
+    get_gh_pages_sha : (cb) ->
+      git_spawn_helper cb, 'rev-parse', gh_pages_branch
+
+    get_doc_dir_sha : (cb) ->
+      git_spawn_helper cb, 'rev-parse', "master:#{document_directory}"
+
+    get_doc_commit_message : (cb) ->
+      git_spawn_helper cb, 'log', "--format='%s'", '-n', 1 , document_directory
+
+    create_new_commit : [
+      'get_gh_pages_sha'
+      'get_doc_dir_sha'
+      'get_doc_commit_message'
+
+      (cb, results) ->
+        #this works at git version 1.8.0.2, and NOT WORK at 1.7 - update git
+        git_spawn_helper cb, 'commit-tree',
+          '-p', results.get_gh_pages_sha,
+          '-m', results.get_doc_commit_message,
+          results.get_doc_dir_sha
+    ]
+
+    save_commit : [
+      'create_new_commit'
+      (cb, results) ->
+        git_spawn_helper cb, 'update-ref',
+          gh_pages_branch,
+          results.create_new_commit
+    ]
+
+    # finalizer
+    (err, results) ->
+      if err
+        console.log err 
+        process.exit 1
+
+      console.log results.save_commit 
+      console.log 'Update for GitHub pages done'.info
+
 
 module.exports = 
   build_coffee        : build_coffee
   test_coffee         : test_coffee
   build_stitched_js   : build_stitched_js
+  build_clinched_js   : build_clinched_js
+  build_clinched_js_files : build_clinched_js_files
   minify_browser_lib  : minify_browser_lib
   compile_jade        : compile_jade
   copy_dir            : copy_dir
   build_json          : build_json
+  update_gh_pages     : update_gh_pages
+
 

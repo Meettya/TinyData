@@ -1,0 +1,18 @@
+// CS google analytics
+:coffeescript
+  # this is Tracking ID from google
+  tracking_id = 'UA-37370501-1'
+
+  ga_settings = 
+    type  : 'text/javascript'
+    async : true
+    src   : 'http://www.google-analytics.com/ga.js'
+
+  _gaq = window._gaq or= []
+  _gaq.push ['_setAccount', tracking_id ], ['_trackPageview']
+
+  ga = document.createElement 'script'
+  ga extends ga_settings
+
+  s = document.getElementsByTagName('script')[0]
+  s.parentNode.insertBefore ga, s

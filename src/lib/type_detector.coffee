@@ -5,9 +5,8 @@ Will be used as simply module with one exported function,
 not a class - its dont needed
 ###
 
-# resolve require from [window] or by require() 
 # use _.isPlainObject(x) to speedup type resolution
-_ = @_ ? require 'lodash'
+_ =require 'lodash'
 
 module.exports = 
   ###

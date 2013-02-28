@@ -14,9 +14,9 @@ timeOnDemand = (label, methodBody) ->
     console.timeEnd label if @_logger_.mustDo 'timing'
     __rval__
 
-# resolve require from [window] or by require() 
+
 # use _.isPlainObject(x) to speedup type resolution
-_ = @_ ? require 'lodash'
+_ = require 'lodash'
 
 RegExpDotForger = require "./lib/regexp_dot_forger"
 Stringificator  = require "./lib/stringificator"
