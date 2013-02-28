@@ -75,7 +75,7 @@
 (function() {
 
   head.js("vendor/lodash-1.0.0-rc.1.min.js", {
-    tinydata: "js/tinydata.js"
+    tinydata: "js/tinydata.js?" + (+new Date())
   });
 
 }).call(this);
@@ -101,7 +101,7 @@
       };
       code_example_1 = function(in_data) {
         var TinyData, comments_finalizer, comments_ratings, comments_ratings_rule, object_td;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -130,7 +130,7 @@
       };
       code_example_2 = function(in_data) {
         var TinyData, all_posts, object_td, post_with_comments, post_with_comments_rule, post_without_comments;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -154,7 +154,7 @@
       };
       code_example_3 = function(in_data) {
         var TinyData, make_rating_values_rule, object_td, posts_with_raitings, rating_aggregator, rating_values_rule;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
@@ -224,10 +224,10 @@
         </div>
         <div class="span9">
           <h5>Построчный разбор кода в нотации Coffeescript</h5>
-          <pre class="prettyprint">TinyData = require 'tinydata'</pre>
+          <pre class="prettyprint">{TinyData} = tinydata_package</pre>
           <p>
-            TinyData на данный момент собирается для браузера как псевдо-CommonJS модуль
-            , поэтому после загрузки его кода запрашиваем класс<em> (возможно данное поведение будет изменено)</em>.
+            TinyData собирается при помощи `clinch` в бандле `tinydata_package`
+            , из которого мы его и запрашиваем<em> (ни что не мешает использовать другое название бандла, просто пересоберите его)</em>.
           </p>
           <pre class="prettyprint">object_td = new TinyData in_data, debug : yes</pre>
           <p>Создаем объект, на входе <strong>JSON</strong> данные - первый аргумент, а вторым следуют опциональные
@@ -309,7 +309,7 @@
         </div>
         <div class="span9">
           <h5>Построчный разбор кода в нотации Coffeescript</h5>
-          <pre class="prettyprint">TinyData = require 'tinydata'
+          <pre class="prettyprint">{TinyData} = tinydata_package
 object_td = new TinyData in_data, debug : yes</pre>
           <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
           <pre class="prettyprint">post_with_comments_rule = /^((\d+)\.comments\.\d+\.(?:comments\.\d+\.)*)_id/</pre>
@@ -369,7 +369,7 @@ object_td = new TinyData in_data, debug : yes</pre>
         </div>
         <div class="span9">
           <h5>Построчный разбор кода в нотации Coffeescript</h5>
-          <pre class="prettyprint">TinyData = require 'tinydata'
+          <pre class="prettyprint">{TinyData} = tinydata_package
 object_td = new TinyData in_data, debug : yes</pre>
           <p>Эти строки описаны в <a href="#rating">примере выше</a>.</p>
           <pre class="prettyprint">make_rating_values_rule = (regexp_transform_fn, path_delimiter) -&gt;

@@ -76,7 +76,7 @@
 (function() {
 
   head.js("vendor/lodash-1.0.0-rc.1.min.js", {
-    tinydata: "js/tinydata.js"
+    tinydata: "js/tinydata.js?" + (+new Date())
   });
 
 }).call(this);
@@ -138,7 +138,7 @@
       };
       show_blog_example = function(in_data) {
         var TinyData, main_container, object_td, post_with_comments_rule, processed_data, ratings_for_post;
-        TinyData = require('tinydata');
+        TinyData = tinydata_package.TinyData;
         object_td = new TinyData(in_data, {
           debug: true
         });
