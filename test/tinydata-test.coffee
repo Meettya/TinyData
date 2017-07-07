@@ -4,7 +4,7 @@ Test suite for node AND browser in one file
 
 _ = require 'lodash'
 
-TinyData = require "../src/tinydata"
+TinyData = require("../lib/tinydata").default
 
 describe 'TinyData:', ->
 
@@ -191,9 +191,9 @@ describe 'TinyData:', ->
     'Абдулла': [ 'Коля', 'Петя', 'Маша' ]
 
   stringify_filter = 
-    origin_pattern  : /^\d+\.$/
-    element_name    : 'like'
-    apply_on_depth  : 1
+    originPattern  : /^\d+\.$/
+    elementName    : 'like'
+    applyOnDepth  : 1
 
   get_filtered_object_stringify = (internal_dot) ->
     filtered_object_stringify = [
