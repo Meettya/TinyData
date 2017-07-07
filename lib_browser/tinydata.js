@@ -284,6 +284,10 @@ var _collector = __webpack_require__(2);
 
 var _collector2 = _interopRequireDefault(_collector);
 
+var _object_extender = __webpack_require__(11);
+
+var _object_extender2 = _interopRequireDefault(_object_extender);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -325,9 +329,8 @@ var TinyData = function () {
   _createClass(TinyData, [{
     key: 'search',
     value: function search(inRule, finalizeFunc, interpSequence) {
-      var sequence = { key: 1, value: 2 };
+      var sequence = (0, _object_extender2.default)({ key: 1, value: 2 }, interpSequence);
 
-      Object.assign(sequence, interpSequence);
       if (this.logger.mustDo('warning') && sequence.key >= sequence.value) {
         console.warn('for reverse interpretation direction it would be better to use #searchBack()\n|key_order| = |' + sequence.key + '|\n|value_order| = |' + sequence.value + '|');
       }
@@ -346,9 +349,8 @@ var TinyData = function () {
   }, {
     key: 'searchBack',
     value: function searchBack(inRule, finalizeFunc, interpSequence) {
-      var sequence = { key: 2, value: 1 };
+      var sequence = (0, _object_extender2.default)({ key: 2, value: 1 }, interpSequence);
 
-      Object.assign(sequence, interpSequence);
       if (this.logger.mustDo('warning') && sequence.value >= sequence.key) {
         console.warn('for direct interpretation direction it would be better to use #search()\n|key_order| = |' + sequence.key + '|\n|value_order| = |' + sequence.value + '|');
       }
@@ -1609,6 +1611,48 @@ var LogState = function () {
 }();
 
 exports.default = LogState;
+module.exports = exports['default'];
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _type_detector = __webpack_require__(0);
+
+var _type_detector2 = _interopRequireDefault(_type_detector);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function doExtendObject(original, addon) {
+  var addonType = void 0;
+  var result = {};
+
+  if ((0, _type_detector2.default)(original) !== 'HASH') {
+    throw TypeError('must called with object, but get |' + original + '|');
+  }
+  if ((0, _type_detector2.default)(addon) !== 'HASH') {
+    return original;
+  }
+  Object.keys(original).forEach(function (key) {
+    addonType = (0, _type_detector2.default)(addon[key]);
+    if (!(addonType === 'NULL' || addonType === 'UNDEFINED')) {
+      result[key] = addon[key];
+    } else {
+      result[key] = original[key];
+    }
+  });
+  return result;
+} /*
+   * Object Extender, sort of Object.assign
+   */
+exports.default = doExtendObject;
 module.exports = exports['default'];
 
 /***/ })

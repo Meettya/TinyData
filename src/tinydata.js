@@ -10,6 +10,7 @@ import Finalizer from './lib/finalizer'
 import LogState from './helpers/log_state'
 import argParser from './helpers/arg_parser'
 import buildCollectorLayout from './helpers/collector'
+import doExtendObject from './helpers/object_extender'
 
 // internal delimiter, as "special symbol"
 const dotInternal = '\uFE45'
@@ -39,9 +40,8 @@ class TinyData {
    * second capture -> value
    */
   search (inRule, finalizeFunc, interpSequence) {
-    let sequence = {key: 1, value: 2}
+    let sequence = doExtendObject({key: 1, value: 2}, interpSequence)
 
-    Object.assign(sequence, interpSequence)
     if (this.logger.mustDo('warning') && sequence.key >= sequence.value) {
       console.warn(`for reverse interpretation direction it would be better to use #searchBack()\n|key_order| = |${sequence.key}|\n|value_order| = |${sequence.value}|`)
     }
@@ -57,9 +57,8 @@ class TinyData {
    * second capture -> key
    */
   searchBack (inRule, finalizeFunc, interpSequence) {
-    let sequence = {key: 2, value: 1}
+    let sequence = doExtendObject({key: 2, value: 1}, interpSequence)
 
-    Object.assign(sequence, interpSequence)
     if (this.logger.mustDo('warning') && sequence.value >= sequence.key) {
       console.warn(`for direct interpretation direction it would be better to use #search()\n|key_order| = |${sequence.key}|\n|value_order| = |${sequence.value}|`)
     }
