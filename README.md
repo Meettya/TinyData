@@ -156,7 +156,7 @@ let internalDelimiter = tinyDataObj.getInternalDelimiter()
 This method return internal delimiter, which used internal instead of dots ('.'), to separete full stringified value.
 In case of RegExp used at `search` - all transformation cloaked, but in case of function used - internal delimiter must be used. For example:
 
-``javascript
+```javascript
 // search for black color at foo at { foo : { color : 'black' }, bar : { color: 'white'} }
 if (stringifiedItem === `foo${internalDelimiter}color${internalDelimiter}black`) {
   // some logic
@@ -165,7 +165,7 @@ if (stringifiedItem === `foo${internalDelimiter}color${internalDelimiter}black`)
 
 ### RegExp transfomtation
 
-``javascript
+```javascript
 // search for white color at foo at { foo : { color : 'black' }, bar : { color: 'white'} }
 let color = 'white'
 let re = new RegExp(`[^.]\\.color\\.${color}`)
@@ -180,7 +180,7 @@ To simplify delimiter transfomtation and use dots ('.') for readability, `doTran
 
 ### Data by path helper
 
-``javascript
+```javascript
 let path = 'foo.color'
 let fooColor = tinyDataObj.getDataByPath(path/*string*/)
 ```
