@@ -1,0 +1,67 @@
+{
+  "mathematics": [
+    {
+      "date": "2001-09-10",
+      "grades": {
+        "Bertie Ramos":4,
+        "Kirsten Lloyd":5,
+        "Rojas Hester":5,
+        "Hendrix Baker":5,
+        "Brenda Carney":2,
+        "Dickerson Marshall":5
+      }
+    },
+    {
+      "date": "2001-09-11",
+      "grades": {
+        "Bertie Ramos":5,
+        "Kirsten Lloyd":2,
+        "Francis Mcdaniel":3,
+        "Gregory Rivera":2,
+        "Lacy Potts":4,
+        "Skinner Miranda":1,
+        "Lindsey Oliver":2,
+        "Castaneda Hardy":4,
+        "Browning Armstrong":4
+      }
+    },
+    {
+      "date": "2001-09-12",
+      "grades": {
+        "Kirsten Lloyd":3,
+        "Rojas Hester":5,
+        "Claudine Nichols":3,
+        "Petra Burks":4,
+        "Franks Burke":5,
+        "Ward Ayala":5,
+        "Adela Hughes":5,
+        "Rowena Dickson":1
+      }
+    }
+  ],
+  "physics": [
+    {
+      "date": "2001-09-10",
+      "grades": {
+        "Katelyn Mooney":4,
+        "Andrea Rhodes":4,
+        "Carole Benjamin":5,
+        "Virginia Cline":5,
+        "Stevenson Strickland":3
+      }
+    },
+    {
+      "date": "2001-09-11",
+      "grades": {
+        "Katelyn Mooney":4,
+        "Andrea Rhodes":4,
+        "Leola Michael":1,
+        "Sherry Acevedo":5,
+        "Collier Whitney":1,
+        "Miller Rodriguez":3,
+        "Alfreda Sanford":5,
+        "Lamb Gaines":5
+      }
+    }
+  ]
+}
