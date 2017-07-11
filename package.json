@@ -1,6 +1,6 @@
 {
   "name": "tiny-data",
-  "version": "1.0.1",
+  "version": "0.8.1",
   "description": "Tiny data mining engine, with path materialization and naive map-reduce logic",
   "main": "./lib/index.js",
   "repository": {
@@ -43,10 +43,12 @@
     "test": "mocha ./test/*-test.coffee",
     "build_lib": "./node_modules/.bin/babel src --out-dir lib",
     "build_browser": "WEBPACK_ENV=build webpack",
-    "dev_browser": "WEBPACK_ENV=dev webpack --progress --colors"
+    "dev_browser": "WEBPACK_ENV=dev webpack --progress --colors",
+    "make_example": "./node_modules/.bin/babel example_readme --out-dir example_readme_parsed"
+
   },
   "engines": {
-    "node": ">=0.6.0"
+    "node": ">=0.12"
   },
   "license": "MIT"
 }
