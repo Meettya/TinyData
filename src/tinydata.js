@@ -117,6 +117,13 @@ class TinyData {
   /*
    * This method may be used for user-defined function
    */
+  getInternalDelimiter () {
+    return this.getPathDelimiter('INTERNAL')
+  }
+
+  /*
+   * This method return any delimiter
+   */
   getPathDelimiter (type) {
     let ucType = type.toUpperCase()
 
