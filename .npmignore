@@ -1,0 +1,14 @@
+test
+test_browser
+example
+develop_suite
+node_modules
+doc
+src
+.DS_Store
+.babelrc
+.travis.yml
+IDEA.md
+ROADMAP.md
+not_reliase
+example_readme

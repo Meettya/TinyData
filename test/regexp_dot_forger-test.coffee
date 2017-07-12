@@ -5,7 +5,7 @@ Test suite for node AND browser in one file
 # resolve require from [window] or by require() 
 _ = require 'lodash'
 
-RegExpDotForger = require "../src/lib/regexp_dot_forger"
+RegExpDotForger = require("../lib/lib/regexp_dot_forger").default
 
 forger_obj = character_set_pattern = escaped_dot_pattern = null
 
@@ -47,10 +47,10 @@ escaped_dot_pattern_suite =
 
 substitution_test_suite = 
   example_true : [
-    [ /\./ , /\uFE45/ ]
-    [ /[.]/ , /[\uFE45]/ ]
-    [ /[\.]/, /[\\uFE45]/ ]
-    [ /[...]/ , /[\uFE45\uFE45\uFE45]/ ]
+    [ /\./ , /﹅/ ]
+    [ /[.]/ , /[﹅]/ ]
+    [ /[\.]/, /[\﹅]/ ]
+    [ /[...]/ , /[﹅﹅﹅]/ ]
     [ /^[^.]+\.comment\.([^.]+)\./, /^[^﹅]+﹅comment﹅([^﹅]+)﹅/ ]
   ]
   example_false : [
@@ -79,7 +79,7 @@ describe 'RegExpDotForger:', ->
       character_set_pattern.should.to.be.instanceof RegExp
 
     it 'should throw Error on unknown name', ->
-      ( -> forger_obj.getPatternByName 'foo_bar' ).should.to.throw /don`t know pattern/
+      ( -> forger_obj.getPatternByName 'foo_bar' ).should.to.throw /dont know pattern/
 
   describe '#doForgeDots()', ->
 
