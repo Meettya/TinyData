@@ -1,8 +1,8 @@
 {
   "name": "tiny-data",
-  "version": "0.8.1",
+  "version": "0.8.3",
   "description": "Tiny data mining engine, with path materialization and naive map-reduce logic",
-  "main": "./lib/index.js",
+  "main": "./lib/tinydata.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Meettya/TinyData.git"
